@@ -4,7 +4,6 @@
  */
 package Data;
 
-import Domain.Rol;
 import Domain.Usuario;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -24,7 +23,6 @@ import java.util.ArrayList;
 public class UsuarioData {
 
     private ConexionDeBaseDeDatosSingleton cdb;
-    private RolData rolData;
 
     /**
      * Constructor de la clase UsuarioData. Inicializa la conexión a la base de
@@ -33,7 +31,6 @@ public class UsuarioData {
      */
     public UsuarioData() {
         this.cdb = ConexionDeBaseDeDatosSingleton.getInstancia();
-        this.rolData = new RolData();
     }
 
     /**
@@ -59,7 +56,17 @@ public class UsuarioData {
                 + ")";
         try (Connection conn = this.cdb.conectar(); Statement stmt = conn.createStatement();) {
             stmt.execute(sql);
+            
+            try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM usuario")) {
+            if (rs.next() && rs.getInt(1) == 0) {
+                // Insertamos un administrador de prueba: usuario "admin" y contraseña "123"
+                String sqlAdmin = "INSERT INTO usuario (nombre, contrasena, estado, correo, idRol) "
+                                + "VALUES ('admin', '123', 1, 'admin@ucr.ac.cr', 1)";
+                stmt.execute(sqlAdmin);
+                System.out.println("¡Usuario 'admin' con clave '123' creado por defecto!");
+            }
         }
+    }
     }
 
     /**
@@ -72,13 +79,14 @@ public class UsuarioData {
      * sentencia SQL
      */
     public void insertar(Usuario usuario) throws SQLException {
-        String sql = "INSERT INTO usuario(nombre, contrasena, estado, correo, idRol) VALUES(?,?,?,?,?)";
+        // Al especificar los campos entre paréntesis, nos aseguramos de que no haya cruces de datos
+        String sql = "INSERT INTO usuario (nombre, contrasena, estado, correo, idRol) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, usuario.getNombre());
             pstmt.setString(2, usuario.getContrasena());
-            pstmt.setInt(3, usuario.isEstado() ? 1 : 0);
-            pstmt.setString(4, usuario.getCorreo());
-            pstmt.setInt(5, usuario.getRol().getIdRol());
+            pstmt.setInt(3, usuario.isEstado() ? 1 : 0); // Estado va en la posición 3
+            pstmt.setString(4, usuario.getCorreo());     // Correo va en la posición 4
+            pstmt.setInt(5, usuario.getRol());           // idRol va en la posición 5
             pstmt.execute();
         }
     }
@@ -100,11 +108,11 @@ public class UsuarioData {
             pstmt.setInt(1, idUsuario);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    Rol rol = rolData.obtenerPorId(rs.getInt("idRol"));
+    
                     return new Usuario(
                             rs.getInt("idUsuario"),
                             rs.getString("nombre"),
-                            rol,
+                            rs.getInt("rol"),
                             rs.getString("contrasena"),
                             rs.getInt("estado") == 1,
                             rs.getString("correo")
@@ -129,11 +137,11 @@ public class UsuarioData {
         String sql = "SELECT * FROM usuario";
         try (Connection conn = this.cdb.conectar(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                Rol rol = rolData.obtenerPorId(rs.getInt("idRol"));
+                
                 usuarios.add(new Usuario(
                         rs.getInt("idUsuario"),
                         rs.getString("nombre"),
-                        rol,
+                        rs.getInt("rol"),
                         rs.getString("contrasena"),
                         rs.getInt("estado") == 1,
                         rs.getString("correo")
@@ -161,7 +169,7 @@ public class UsuarioData {
             pstmt.setString(2, usuario.getContrasena());
             pstmt.setInt(3, usuario.isEstado() ? 1 : 0);
             pstmt.setString(4, usuario.getCorreo());
-            pstmt.setInt(5, usuario.getRol().getIdRol());
+            pstmt.setInt(5, usuario.getRol());
             pstmt.setInt(6, usuario.getId());
             pstmt.execute();
         }

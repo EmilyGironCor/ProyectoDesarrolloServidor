@@ -4,60 +4,63 @@
  */
 package Domain;
 
-import Domain.Usuario;
-import java.io.ObjectInputStream;
+import Utility.GestionXML;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.Socket;
-import javax.management.ObjectInstance;
-import org.w3c.dom.Element;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.jdom.Element;
+import org.jdom.JDOMException;
 
 /**
  *
- * @author saray
+ * @author Saray
  */
-public class miCliente {
-    private int idCliente;
+public class MiCliente extends Thread {
+
     private Socket socket;
-    private Usuario usuario;
-    private ObjectInputStream entrada;
-    private ObjectInputStream salida;
-    private boolean conectado;
+    private BufferedReader recibir;
+    private PrintStream enviar;
 
-    public miCliente(Socket socket) {
+    public MiCliente(Socket socket) throws IOException {
         this.socket = socket;
-    }
-    
-    public void enviarMensaje(Element element){
-        
-    }
-    
-    public Element recibirMensaje(){
-        return null;
-    }
-    
-    public void cerrarSesion(){
-        
+        this.recibir = new BufferedReader(
+                new InputStreamReader(this.socket.getInputStream())
+        );
+        this.enviar = new PrintStream(this.socket.getOutputStream());
+    } // constructor
+
+    public void enviarDatos(String dato) {
+        this.enviar.println(dato);
     }
 
-    public Usuario getUsuario() {
-        return usuario;
+    public String leerDatos() throws IOException {
+        return this.recibir.readLine();
     }
 
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
+    public void run() {
+        try {
 
-    public boolean isConectado() {
-        return conectado;
-    }
+            do {
+                String xmlString = this.leerDatos();
+                System.out.println(xmlString);
+                Element eAccion = GestionXML.stringTOXML(xmlString);
+                String accion = eAccion.getAttributeValue("metodo");
+                EnumProtocolo enumProtocolo
+                        = EnumProtocolo.valueOf(accion);
+                enumProtocolo.accion(this, eAccion.getChild("datos"));
 
-    public void setConectado(boolean conectado) {
-        this.conectado = conectado;
-    }
+            } while (true);
 
-    @Override
-    public String toString() {
-        return "miCliente{" + "idCliente=" + idCliente + ", socket=" + socket + ", usuario=" + usuario + ", entrada=" + entrada + ", salida=" + salida + ", conectado=" + conectado + '}';
-    }
-    
-    
-}
+        } catch (IOException ex) {
+            Logger.getLogger(MiCliente.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (JDOMException ex) {
+            Logger.getLogger(MiCliente.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    } // run
+
+} // fin clase
+

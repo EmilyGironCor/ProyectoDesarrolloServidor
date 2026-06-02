@@ -5,12 +5,14 @@
 package Domain;
 
 import java.util.Date;
+import org.jdom.Element;
 
 /**
  *
  * @author saray
  */
 public class Tarea {
+
     private int idTarea;
     private String nombreTarea;
     private String URL;
@@ -19,6 +21,9 @@ public class Tarea {
     private int prioridad;
     private Date fechaDeCreacion;
     private int cantidadDeHilos;
+
+    public Tarea() {
+    }
 
     public Tarea(int idTarea, String nombreTarea, String URL, String estado, int idUsuarioCreador, int prioridad, Date fechaDeCreacion, int cantidadDeHilos) {
         this.idTarea = idTarea;
@@ -31,7 +36,8 @@ public class Tarea {
         this.cantidadDeHilos = cantidadDeHilos;
     }
 
-    public int getIdTarea() { return idTarea;
+    public int getIdTarea() {
+        return idTarea;
     }
 
     public void setIdTarea(int idTarea) {
@@ -98,6 +104,75 @@ public class Tarea {
     public String toString() {
         return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea + ", URL=" + URL + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioCreador + ", prioridad=" + prioridad + ", fechaDeCreacion=" + fechaDeCreacion + ", cantidadDeHilos=" + cantidadDeHilos + '}';
     }
-    
-    
+
+    public void toObject(Element element) {
+
+        this.idTarea = Integer.parseInt(
+                element.getChild("tarea")
+                        .getChild("idTarea")
+                        .getValue());
+
+        this.nombreTarea = element.getChild("tarea")
+                .getChild("nombreTarea")
+                .getValue();
+
+        this.URL = element.getChild("tarea")
+                .getChild("URL")
+                .getValue();
+
+        this.estado = element.getChild("tarea")
+                .getChild("estado")
+                .getValue();
+
+        this.idUsuarioCreador = Integer.parseInt(
+                element.getChild("tarea")
+                        .getChild("idUsuarioCreador")
+                        .getValue());
+
+        this.prioridad = Integer.parseInt(
+                element.getChild("tarea")
+                        .getChild("prioridad")
+                        .getValue());
+    }
+
+    public Element toXMLElement() {
+
+        Element eTarea = new Element("tarea");
+
+        Element eIdTarea = new Element("idTarea");
+        eIdTarea.addContent(String.valueOf(this.idTarea));
+
+        Element eNombreTarea = new Element("nombreTarea");
+        eNombreTarea.addContent(this.nombreTarea);
+
+        Element eURL = new Element("URL");
+        eURL.addContent(this.URL);
+
+        Element eEstado = new Element("estado");
+        eEstado.addContent(this.estado);
+
+        Element eIdUsuarioCreador = new Element("idUsuarioCreador");
+        eIdUsuarioCreador.addContent(String.valueOf(this.idUsuarioCreador));
+
+        Element ePrioridad = new Element("prioridad");
+        ePrioridad.addContent(String.valueOf(this.prioridad));
+
+        Element eFechaCreacion = new Element("fechaDeCreacion");
+        eFechaCreacion.addContent(String.valueOf(this.fechaDeCreacion));
+
+        Element eCantidadHilos = new Element("cantidadDeHilos");
+        eCantidadHilos.addContent(String.valueOf(this.cantidadDeHilos));
+
+        eTarea.addContent(eIdTarea);
+        eTarea.addContent(eNombreTarea);
+        eTarea.addContent(eURL);
+        eTarea.addContent(eEstado);
+        eTarea.addContent(eIdUsuarioCreador);
+        eTarea.addContent(ePrioridad);
+        eTarea.addContent(eFechaCreacion);
+        eTarea.addContent(eCantidadHilos);
+
+        return eTarea;
+    }
+
 }
