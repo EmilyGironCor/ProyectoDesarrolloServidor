@@ -20,7 +20,7 @@ import org.jdom.JDOMException;
  * @author Saray
  */
 public class MiCliente extends Thread {
-
+//comit
     private Socket socket;
     private BufferedReader recibir;
     private PrintStream enviar;
