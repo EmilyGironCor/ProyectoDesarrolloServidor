@@ -44,30 +44,46 @@ public class UsuarioData {
      * @throws SQLException Si ocurre un error durante la ejecución de la
      * sentencia SQL
      */
-    public void inicializarBD() throws SQLException {
-        String sql = "CREATE TABLE IF NOT EXISTS usuario ("
-                + "idUsuario INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + "nombre TEXT NOT NULL,"
-                + "contrasena TEXT NOT NULL,"
-                + "estado INTEGER NOT NULL,"
-                + "correo TEXT NOT NULL,"
-                + "idRol INTEGER NOT NULL,"
-                + "FOREIGN KEY (idRol) REFERENCES rol(idRol)"
-                + ")";
-        try (Connection conn = this.cdb.conectar(); Statement stmt = conn.createStatement();) {
-            stmt.execute(sql);
+public void inicializarBD() throws SQLException {
+    String sql = "CREATE TABLE IF NOT EXISTS usuario ("
+            + "idUsuario INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + "nombre TEXT NOT NULL UNIQUE,"  // ← UNIQUE evita duplicados
+            + "contrasena TEXT NOT NULL,"
+            + "estado INTEGER NOT NULL,"
+            + "correo TEXT NOT NULL,"
+            + "idRol INTEGER NOT NULL,"
+            + "FOREIGN KEY (idRol) REFERENCES rol(idRol)"
+            + ")";
+    
+    try (Connection conn = this.cdb.conectar(); 
+         Statement stmt = conn.createStatement()) {
+        
+        stmt.execute(sql);
+        
+        // Verificar si ya existe un administrador
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM usuario");
+        rs.next();
+        int count = rs.getInt(1);
+        rs.close();
+        
+        if (count == 0) {
+            // Hash SHA-1 de "admin"
+            String contrasenaEncriptada = encriptarSHA1("admin");
             
-            try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM usuario")) {
-            if (rs.next() && rs.getInt(1) == 0) {
-                // Insertamos un administrador de prueba: usuario "admin" y contraseña "123"
-                String sqlAdmin = "INSERT INTO usuario (nombre, contrasena, estado, correo, idRol) "
-                                + "VALUES ('admin', '123', 1, 'admin@ucr.ac.cr', 1)";
-                stmt.execute(sqlAdmin);
-                System.out.println("¡Usuario 'admin' con clave '123' creado por defecto!");
-            }
+            String sqlAdmin = "INSERT INTO usuario (nombre, contrasena, estado, correo, idRol) "
+                    + "VALUES ('admin', '" + contrasenaEncriptada + "', 1, 'admin@ejemplo.com', 1)";
+            stmt.execute(sqlAdmin);
+            
+            System.out.println("✅ Usuario 'admin' creado con contraseña 'admin'");
+            System.out.println("   Hash almacenado: " + contrasenaEncriptada);
+        } else {
+            System.out.println("La tabla usuario ya existe y tiene datos");
         }
+    } catch (SQLException e) {
+        System.err.println("Error al inicializar BD: " + e.getMessage());
+        throw e;
     }
-    }
+}
 
     /**
      * Inserta un nuevo usuario en la base de datos. Convierte el estado
@@ -108,11 +124,11 @@ public class UsuarioData {
             pstmt.setInt(1, idUsuario);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-    
+
                     return new Usuario(
                             rs.getInt("idUsuario"),
                             rs.getString("nombre"),
-                            rs.getInt("rol"),
+                            rs.getInt("idRol"),
                             rs.getString("contrasena"),
                             rs.getInt("estado") == 1,
                             rs.getString("correo")
@@ -141,7 +157,7 @@ public class UsuarioData {
                 usuarios.add(new Usuario(
                         rs.getInt("idUsuario"),
                         rs.getString("nombre"),
-                        rs.getInt("rol"),
+                        rs.getInt("idRol"),
                         rs.getString("contrasena"),
                         rs.getInt("estado") == 1,
                         rs.getString("correo")
@@ -189,4 +205,43 @@ public class UsuarioData {
             pstmt.execute();
         }
     }
+
+    /**
+     * Encripta un texto usando SHA-1. Mismo algoritmo que debe usar el Business
+     * al verificar login.
+     */
+    private String encriptarSHA1(String texto) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-1");
+            byte[] hash = md.digest(texto.getBytes("UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception ex) {
+            System.out.println("Error al encriptar: " + ex.getMessage());
+            return texto; // fallback: devolver sin encriptar
+        }
+    }
+    public Usuario obtenerPorNombre(String nombre) throws SQLException {
+    String sql = "SELECT * FROM usuario WHERE nombre = ?";
+    try (Connection conn = this.cdb.conectar(); 
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        pstmt.setString(1, nombre);
+        try (ResultSet rs = pstmt.executeQuery()) {
+            if (rs.next()) {
+                return new Usuario(
+                    rs.getInt("idUsuario"),
+                    rs.getString("nombre"),
+                    rs.getInt("idRol"),
+                    rs.getString("contrasena"),
+                    rs.getInt("estado") == 1,
+                    rs.getString("correo")
+                );
+            }
+        }
+    }
+    return null;
+}
 }//fin clase

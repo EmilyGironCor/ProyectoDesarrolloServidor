@@ -105,35 +105,61 @@ public class Tarea {
         return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea + ", URL=" + URL + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioCreador + ", prioridad=" + prioridad + ", fechaDeCreacion=" + fechaDeCreacion + ", cantidadDeHilos=" + cantidadDeHilos + '}';
     }
 
-    public void toObject(Element element) {
+public void toObject(Element element) {
+    // Detectar si ya somos <tarea> o si hay que buscarlo dentro de <datos>
+    Element root = element.getName().equals("tarea") 
+                   ? element 
+                   : element.getChild("tarea");
 
-        this.idTarea = Integer.parseInt(
-                element.getChild("tarea")
-                        .getChild("idTarea")
-                        .getValue());
-
-        this.nombreTarea = element.getChild("tarea")
-                .getChild("nombreTarea")
-                .getValue();
-
-        this.URL = element.getChild("tarea")
-                .getChild("URL")
-                .getValue();
-
-        this.estado = element.getChild("tarea")
-                .getChild("estado")
-                .getValue();
-
-        this.idUsuarioCreador = Integer.parseInt(
-                element.getChild("tarea")
-                        .getChild("idUsuarioCreador")
-                        .getValue());
-
-        this.prioridad = Integer.parseInt(
-                element.getChild("tarea")
-                        .getChild("prioridad")
-                        .getValue());
+    if (root == null) {
+        System.out.println("Error: No se encontró el nodo <tarea> en el XML recibido.");
+        return;
     }
+
+    // idTarea (puede llegar en 0 si es nueva)
+    if (root.getChild("idTarea") != null) {
+        this.idTarea = Integer.parseInt(root.getChild("idTarea").getValue());
+    }
+
+    if (root.getChild("nombreTarea") != null) {
+        this.nombreTarea = root.getChild("nombreTarea").getValue();
+    }
+
+    if (root.getChild("URL") != null) {
+        this.URL = root.getChild("URL").getValue();
+    }
+
+    if (root.getChild("estado") != null) {
+        this.estado = root.getChild("estado").getValue();
+    } else {
+        this.estado = "pendiente"; // valor por defecto
+    }
+
+    if (root.getChild("idUsuarioCreador") != null) {
+        this.idUsuarioCreador = Integer.parseInt(root.getChild("idUsuarioCreador").getValue());
+    }
+
+    if (root.getChild("prioridad") != null) {
+        this.prioridad = Integer.parseInt(root.getChild("prioridad").getValue());
+    }
+
+    // Fix 6 incluido: si no viene fecha, usar la actual
+    if (root.getChild("fechaDeCreacion") != null && 
+        !root.getChild("fechaDeCreacion").getValue().equals("null")) {
+        try {
+            this.fechaDeCreacion = new java.text.SimpleDateFormat("yyyy-MM-dd")
+                                       .parse(root.getChild("fechaDeCreacion").getValue());
+        } catch (Exception e) {
+            this.fechaDeCreacion = new java.util.Date(); // fallback a hoy
+        }
+    } else {
+        this.fechaDeCreacion = new java.util.Date(); // asignar fecha actual
+    }
+
+    if (root.getChild("cantidadDeHilos") != null) {
+        this.cantidadDeHilos = Integer.parseInt(root.getChild("cantidadDeHilos").getValue());
+    }
+}
 
     public Element toXMLElement() {
 

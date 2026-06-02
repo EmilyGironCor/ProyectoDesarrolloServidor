@@ -21,6 +21,7 @@ import org.jdom.JDOMException;
  */
 public class MiCliente extends Thread {
 //comit
+
     private Socket socket;
     private BufferedReader recibir;
     private PrintStream enviar;
@@ -59,6 +60,24 @@ public class MiCliente extends Thread {
             Logger.getLogger(MiCliente.class.getName()).log(Level.SEVERE, null, ex);
         } catch (JDOMException ex) {
             Logger.getLogger(MiCliente.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            if (recibir != null) {
+                try {
+                    recibir.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(MiCliente.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            if (enviar != null) {
+                enviar.close();
+            }
+            if (socket != null && !socket.isClosed()) {
+                try {
+                    socket.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(MiCliente.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
     } // run
 

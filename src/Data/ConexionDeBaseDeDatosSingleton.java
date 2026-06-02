@@ -32,12 +32,12 @@ public class ConexionDeBaseDeDatosSingleton {
      *
      * @return instancia de ConexionBD
      */
-    public static ConexionDeBaseDeDatosSingleton getInstancia() {
-        if (cdb == null) {
-            cdb = new ConexionDeBaseDeDatosSingleton();
-        }
-        return cdb;
-    }//get instancia
+    public static synchronized ConexionDeBaseDeDatosSingleton getInstancia() {
+    if (cdb == null) {
+        cdb = new ConexionDeBaseDeDatosSingleton();
+    }
+    return cdb;
+}
 
     /**
      * Establece y retorna una conexion activa con la base de datos
