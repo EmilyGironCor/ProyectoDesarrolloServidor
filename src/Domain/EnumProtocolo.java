@@ -54,29 +54,45 @@ public enum EnumProtocolo {
             }
         }
     },
-    INSERTARTAREA {
-        @Override
-        public void accion(MiCliente mCliente, Element eDatos) {
-            try {
-                System.out.println("Estoy en la accion INSERTARTAREA");
+INSERTARTAREA {
+    @Override
+    public void accion(MiCliente mCliente, Element eDatos) {
+        try {
+            System.out.println("Estoy en la accion INSERTARTAREA");
 
-                Tarea tarea = new Tarea();
-                tarea.toObject(eDatos);
-
-                TareaBusiness tb = new TareaBusiness();
-                tb.insertar(tarea);
-
-                // Notificar al cliente que la tarea se guardó correctamente en la BD
-                Element eExito = new Element("resultado").addContent("OK");
-                DataProtocolo dp = new DataProtocolo("INSERTARTAREA_RESPUESTA", eExito);
-                mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
-
-            } catch (SQLException ex) {
-                Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
-                enviarErrorAlCliente(mCliente, "INSERTARTAREA", ex.getMessage());
+            Tarea tarea = new Tarea();
+            tarea.toObject(eDatos);
+            
+            // Si viene nombre de usuario encargado, buscar su ID
+            String nombreEncargado = eDatos.getChildText("nombreUsuarioEncargado");
+            if (nombreEncargado != null && !nombreEncargado.isEmpty()) {
+                UsuarioBusiness ub = new UsuarioBusiness();
+                Usuario encargado = ub.buscarPorNombre(nombreEncargado);
+                if (encargado != null) {
+                    tarea.setidUsuarioEncargado(encargado.getId());
+                } else {
+                    // Usuario no encontrado, enviar error
+                    Element eError = new Element("resultado").addContent("ERROR");
+                    eError.addContent(new Element("mensaje").setText("Usuario encargado no encontrado: " + nombreEncargado));
+                    DataProtocolo dp = new DataProtocolo("INSERTARTAREA_RESPUESTA", eError);
+                    mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+                    return;
+                }
             }
+
+            TareaBusiness tb = new TareaBusiness();
+            tb.insertar(tarea);
+
+            Element eExito = new Element("resultado").addContent("OK");
+            DataProtocolo dp = new DataProtocolo("INSERTARTAREA_RESPUESTA", eExito);
+            mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+
+        } catch (SQLException ex) {
+            Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
+            enviarErrorAlCliente(mCliente, "INSERTARTAREA", ex.getMessage());
         }
-    },
+    }
+},
     LISTARUSUARIO {
         @Override
         public void accion(MiCliente mCliente, Element eDatos) {

@@ -17,7 +17,7 @@ public class Tarea {
     private String nombreTarea;
     private String URL;
     private String estado;
-    private int idUsuarioCreador;
+    private int idUsuarioEncargado;
     private int prioridad;
     private Date fechaDeCreacion;
     private int cantidadDeHilos;
@@ -30,7 +30,7 @@ public class Tarea {
         this.nombreTarea = nombreTarea;
         this.URL = URL;
         this.estado = estado;
-        this.idUsuarioCreador = idUsuarioCreador;
+        this.idUsuarioEncargado = idUsuarioCreador;
         this.prioridad = prioridad;
         this.fechaDeCreacion = fechaDeCreacion;
         this.cantidadDeHilos = cantidadDeHilos;
@@ -69,11 +69,11 @@ public class Tarea {
     }
 
     public int getIdUsuarioCreador() {
-        return idUsuarioCreador;
+        return idUsuarioEncargado;
     }
 
     public void setIdUsuarioCreador(int idUsuarioCreador) {
-        this.idUsuarioCreador = idUsuarioCreador;
+        this.idUsuarioEncargado = idUsuarioCreador;
     }
 
     public int getPrioridad() {
@@ -100,9 +100,17 @@ public class Tarea {
         this.cantidadDeHilos = cantidadDeHilos;
     }
 
+    public int getidUsuarioEncargado() {
+        return idUsuarioEncargado;
+    }
+
+    public void setidUsuarioEncargado(int dUsuarioEncargado) {
+        this.idUsuarioEncargado = dUsuarioEncargado;
+    }
+
     @Override
     public String toString() {
-        return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea + ", URL=" + URL + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioCreador + ", prioridad=" + prioridad + ", fechaDeCreacion=" + fechaDeCreacion + ", cantidadDeHilos=" + cantidadDeHilos + '}';
+        return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea + ", URL=" + URL + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioEncargado + ", prioridad=" + prioridad + ", fechaDeCreacion=" + fechaDeCreacion + ", cantidadDeHilos=" + cantidadDeHilos + '}';
     }
 
 public void toObject(Element element) {
@@ -136,7 +144,7 @@ public void toObject(Element element) {
     }
 
     if (root.getChild("idUsuarioCreador") != null) {
-        this.idUsuarioCreador = Integer.parseInt(root.getChild("idUsuarioCreador").getValue());
+        this.idUsuarioEncargado = Integer.parseInt(root.getChild("idUsuarioCreador").getValue());
     }
 
     if (root.getChild("prioridad") != null) {
@@ -178,7 +186,7 @@ public void toObject(Element element) {
         eEstado.addContent(this.estado);
 
         Element eIdUsuarioCreador = new Element("idUsuarioCreador");
-        eIdUsuarioCreador.addContent(String.valueOf(this.idUsuarioCreador));
+        eIdUsuarioCreador.addContent(String.valueOf(this.idUsuarioEncargado));
 
         Element ePrioridad = new Element("prioridad");
         ePrioridad.addContent(String.valueOf(this.prioridad));
