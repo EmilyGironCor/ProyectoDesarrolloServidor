@@ -19,7 +19,7 @@ public class Tarea implements XMLConvertible {
     private String estado;
     private int idUsuarioEncargado;
     private int prioridad;
-    private Date fechaDeCreacion;
+
     private int cantidadDeHilos;
 
     public Tarea(String url) {
@@ -30,14 +30,14 @@ public class Tarea implements XMLConvertible {
 
     }
 
-    public Tarea(int idTarea, String nombreTarea, String URL, String estado, int idUsuarioCreador, int prioridad, Date fechaDeCreacion, int cantidadDeHilos) {
+    public Tarea(int idTarea, String nombreTarea, String URL, String estado, int idUsuarioCreador, int prioridad, int cantidadDeHilos) {
         this.idTarea = idTarea;
         this.nombreTarea = nombreTarea;
         this.URL = URL;
         this.estado = estado;
         this.idUsuarioEncargado = idUsuarioCreador;
         this.prioridad = prioridad;
-        this.fechaDeCreacion = fechaDeCreacion;
+
         this.cantidadDeHilos = cantidadDeHilos;
     }
 
@@ -89,14 +89,6 @@ public class Tarea implements XMLConvertible {
         this.prioridad = prioridad;
     }
 
-    public Date getFechaDeCreacion() {
-        return fechaDeCreacion;
-    }
-
-    public void setFechaDeCreacion(Date fechaDeCreacion) {
-        this.fechaDeCreacion = fechaDeCreacion;
-    }
-
     public int getCantidadDeHilos() {
         return cantidadDeHilos;
     }
@@ -115,7 +107,7 @@ public class Tarea implements XMLConvertible {
 
     @Override
     public String toString() {
-        return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea + ", URL=" + URL + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioEncargado + ", prioridad=" + prioridad + ", fechaDeCreacion=" + fechaDeCreacion + ", cantidadDeHilos=" + cantidadDeHilos + '}';
+        return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea + ", URL=" + URL + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioEncargado + ", prioridad=" + prioridad + ", cantidadDeHilos=" + cantidadDeHilos + '}';
     }
 
     public void toObject(Element element) {
@@ -156,19 +148,6 @@ public class Tarea implements XMLConvertible {
             this.prioridad = Integer.parseInt(root.getChild("prioridad").getValue());
         }
 
-        // Fix 6 incluido: si no viene fecha, usar la actual
-        if (root.getChild("fechaDeCreacion") != null
-                && !root.getChild("fechaDeCreacion").getValue().equals("null")) {
-            try {
-                this.fechaDeCreacion = new java.text.SimpleDateFormat("yyyy-MM-dd")
-                        .parse(root.getChild("fechaDeCreacion").getValue());
-            } catch (Exception e) {
-                this.fechaDeCreacion = new java.util.Date(); // fallback a hoy
-            }
-        } else {
-            this.fechaDeCreacion = new java.util.Date(); // asignar fecha actual
-        }
-
         if (root.getChild("cantidadDeHilos") != null) {
             this.cantidadDeHilos = Integer.parseInt(root.getChild("cantidadDeHilos").getValue());
         }
@@ -196,9 +175,6 @@ public class Tarea implements XMLConvertible {
         Element ePrioridad = new Element("prioridad");
         ePrioridad.addContent(String.valueOf(this.prioridad));
 
-        Element eFechaCreacion = new Element("fechaDeCreacion");
-        eFechaCreacion.addContent(String.valueOf(this.fechaDeCreacion));
-
         Element eCantidadHilos = new Element("cantidadDeHilos");
         eCantidadHilos.addContent(String.valueOf(this.cantidadDeHilos));
 
@@ -208,7 +184,6 @@ public class Tarea implements XMLConvertible {
         eTarea.addContent(eEstado);
         eTarea.addContent(eIdUsuarioCreador);
         eTarea.addContent(ePrioridad);
-        eTarea.addContent(eFechaCreacion);
         eTarea.addContent(eCantidadHilos);
 
         return eTarea;

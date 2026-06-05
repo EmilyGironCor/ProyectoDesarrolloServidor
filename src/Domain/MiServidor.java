@@ -15,23 +15,29 @@ import java.net.Socket;
 public class MiServidor {
 
     private ServerSocket serverSocket;
+    private static MiClienteTrabajador trabajador;
 
     public MiServidor(int puerto) throws IOException {
-        this.serverSocket=new ServerSocket(puerto);
+        this.serverSocket = new ServerSocket(puerto);
     } // constructor
-    
-    public void escuchar() throws IOException{
+
+    public void escuchar() throws IOException {
         System.out.println("Servidor run");
-        while (true) {            
-            Socket socket=this.serverSocket.accept();
+        while (true) {
+            Socket socket = this.serverSocket.accept();
             System.out.println("Cliente accept");
-           // MiCliente miCliente=new MiCliente(socket);
-            MiClienteTrabajador trabajador= new MiClienteTrabajador(socket);
+            
+            MiCliente miCliente = new MiCliente(socket);
+            miCliente.start();
+
+            this.trabajador = new MiClienteTrabajador(socket);
             trabajador.start();
-           // miCliente.start();
+
         } // while
     } // escuchar
-    
-    
-    
+
+    public static MiClienteTrabajador getTrabajador() {
+        return trabajador;
+    }
+
 } // fin clase

@@ -27,53 +27,49 @@ public class MiClienteTrabajador extends Cliente {
     private Socket socket;
     private BufferedReader recibir;
     private PrintStream enviar;
+    private Tarea analisis;
 
     public MiClienteTrabajador(Socket socket) throws IOException {
         super(socket);
+        this.analisis = null;
     }
 
-   public void run() {
-    try {
-        Tarea analisis = new Tarea();
-        analisis.setIdTarea(1);
-        analisis.setURL("https://www.ucr.ac.cr/");
-        analisis.setNombreTarea("Analisis UCR");
-        analisis.setEstado("pendiente");
-        analisis.setPrioridad(1);
-        analisis.setCantidadDeHilos(3);
+    public void run() {
+        try {
 
-        DataProtocolo dp = new DataProtocolo("ANALIZARURL", analisis.toXMLElement());
+        
 
-        String stringXML = GestionXML.xmlToString(dp.geteAccion());
+            do {
+                String xmlString = this.leerDatos();
 
-        System.out.println("Enviando al trabajador:");
-        System.out.println(stringXML);
+                if (xmlString == null) {
+                    System.out.println("Cliente desconectado");
+                    break;
+                }
 
-        this.enviarDatos(stringXML);
+                System.out.println(xmlString);
 
-        do {
-            String xmlString = this.leerDatos();
+                Element eAccion = GestionXML.stringTOXML(xmlString);
+                String accion = eAccion.getAttributeValue("metodo");
 
-            if (xmlString == null) {
-                System.out.println("Cliente desconectado");
-                break;
-            }
+                EnumProtocolo enumProtocolo = EnumProtocolo.valueOf(accion);
+                enumProtocolo.accion(this, eAccion.getChild("datos"));
 
-            System.out.println(xmlString);
+            } while (true);
 
-            Element eAccion = GestionXML.stringTOXML(xmlString);
-            String accion = eAccion.getAttributeValue("metodo");
-
-            EnumProtocolo enumProtocolo = EnumProtocolo.valueOf(accion);
-            enumProtocolo.accion(this, eAccion.getChild("datos"));
-
-        } while (true);
-
-    } catch (IOException ex) {
-        Logger.getLogger(MiClienteTrabajador.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (JDOMException ex) {
-        Logger.getLogger(MiClienteTrabajador.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(MiClienteTrabajador.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (JDOMException ex) {
+            Logger.getLogger(MiClienteTrabajador.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
-}
 
-}
+    public Tarea getAnalisis() {
+        return analisis;
+    }
+
+    public void setAnalisis(Tarea analisis) {
+        this.analisis = analisis;
+    }
+
+}//fin clases
