@@ -20,7 +20,6 @@ import org.jdom.JDOMException;
  * @author Saray
  */
 public class MiCliente extends Thread {
-//comit
 
     private Socket socket;
     private BufferedReader recibir;
@@ -47,6 +46,12 @@ public class MiCliente extends Thread {
 
             do {
                 String xmlString = this.leerDatos();
+
+                if (xmlString == null) {
+                    System.out.println("Cliente desconectado");
+                    break;
+                }
+                
                 System.out.println(xmlString);
                 Element eAccion = GestionXML.stringTOXML(xmlString);
                 String accion = eAccion.getAttributeValue("metodo");

@@ -68,6 +68,7 @@ public static void listarTodosLosUsuarios() {
                 System.out.println("  Correo: " + u.getCorreo());
                 System.out.println("  Estado: " + (u.isEstado() ? "Activo" : "Inactivo"));
                 System.out.println("  Contraseña (hash): " + u.getContrasena().substring(0, Math.min(20, u.getContrasena().length())) + "...");
+                System.out.println("contra" + u.getContrasena());
                 System.out.println("--------------------------------------------------");
             }
             

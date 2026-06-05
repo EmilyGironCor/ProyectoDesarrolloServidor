@@ -54,45 +54,64 @@ public enum EnumProtocolo {
             }
         }
     },
-INSERTARTAREA {
-    @Override
-    public void accion(MiCliente mCliente, Element eDatos) {
-        try {
-            System.out.println("Estoy en la accion INSERTARTAREA");
+    INSERTARTAREA {
+        @Override
+        public void accion(MiCliente mCliente, Element eDatos) {
+            try {
+                System.out.println("Estoy en la accion INSERTARTAREA");
 
-            Tarea tarea = new Tarea();
-            tarea.toObject(eDatos);
-            
-            // Si viene nombre de usuario encargado, buscar su ID
-            String nombreEncargado = eDatos.getChildText("nombreUsuarioEncargado");
-            if (nombreEncargado != null && !nombreEncargado.isEmpty()) {
-                UsuarioBusiness ub = new UsuarioBusiness();
-                Usuario encargado = ub.buscarPorNombre(nombreEncargado);
-                if (encargado != null) {
-                    tarea.setidUsuarioEncargado(encargado.getId());
-                } else {
-                    // Usuario no encontrado, enviar error
-                    Element eError = new Element("resultado").addContent("ERROR");
-                    eError.addContent(new Element("mensaje").setText("Usuario encargado no encontrado: " + nombreEncargado));
-                    DataProtocolo dp = new DataProtocolo("INSERTARTAREA_RESPUESTA", eError);
+                Tarea tarea = new Tarea();
+                tarea.toObject(eDatos);
+
+                Element eTarea = eDatos.getChild("tarea");
+
+                String nombreEncargado = null;
+
+                if (eTarea != null) {
+                    nombreEncargado = eTarea.getChildText("nombreUsuarioEncargado");
+                }
+
+                if (nombreEncargado == null || nombreEncargado.trim().isEmpty()) {
+                    Element eRespuesta = new Element("respuesta");
+                    eRespuesta.addContent(new Element("resultado").setText("ERROR"));
+                    eRespuesta.addContent(new Element("mensaje").setText("Debe indicar un usuario encargado"));
+
+                    DataProtocolo dp = new DataProtocolo("INSERTARTAREA_RESPUESTA", eRespuesta);
                     mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
                     return;
                 }
+
+                UsuarioBusiness ub = new UsuarioBusiness();
+                Usuario encargado = ub.buscarPorNombre(nombreEncargado.trim());
+
+                if (encargado == null) {
+                    Element eRespuesta = new Element("respuesta");
+                    eRespuesta.addContent(new Element("resultado").setText("ERROR"));
+                    eRespuesta.addContent(new Element("mensaje").setText("Usuario encargado no encontrado: " + nombreEncargado));
+
+                    DataProtocolo dp = new DataProtocolo("INSERTARTAREA_RESPUESTA", eRespuesta);
+                    mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+                    return;
+                }
+
+                tarea.setidUsuarioEncargado(encargado.getId());
+
+                TareaBusiness tb = new TareaBusiness();
+                tb.insertar(tarea);
+
+                Element eRespuesta = new Element("respuesta");
+                eRespuesta.addContent(new Element("resultado").setText("OK"));
+                eRespuesta.addContent(new Element("mensaje").setText("Tarea registrada correctamente"));
+
+                DataProtocolo dp = new DataProtocolo("INSERTARTAREA_RESPUESTA", eRespuesta);
+                mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+
+            } catch (SQLException ex) {
+                Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
+                enviarErrorAlCliente(mCliente, "INSERTARTAREA", ex.getMessage());
             }
-
-            TareaBusiness tb = new TareaBusiness();
-            tb.insertar(tarea);
-
-            Element eExito = new Element("resultado").addContent("OK");
-            DataProtocolo dp = new DataProtocolo("INSERTARTAREA_RESPUESTA", eExito);
-            mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
-
-        } catch (SQLException ex) {
-            Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
-            enviarErrorAlCliente(mCliente, "INSERTARTAREA", ex.getMessage());
         }
-    }
-},
+    },
     LISTARUSUARIO {
         @Override
         public void accion(MiCliente mCliente, Element eDatos) {
@@ -116,17 +135,17 @@ INSERTARTAREA {
             }
         }
     },
-ELIMINARUSUARIO {
-    @Override
-    public void accion(MiCliente mCliente, Element eDatos) {
-        try {
-            System.out.println("=== ELIMINARUSUARIO ===");
-            System.out.println("XML recibido: " + Utility.GestionXML.xmlToString(eDatos));
-            
-            // Buscar el idUsuario en el XML (puede estar directamente o dentro de otro nodo)
-            String idUsuarioStr = null;
-            
-            // Opción 1: Directamente como hijo de <datos>
+    ELIMINARUSUARIO {
+        @Override
+        public void accion(MiCliente mCliente, Element eDatos) {
+            try {
+                System.out.println("=== ELIMINARUSUARIO ===");
+                System.out.println("XML recibido: " + Utility.GestionXML.xmlToString(eDatos));
+
+                // Buscar el idUsuario en el XML (puede estar directamente o dentro de otro nodo)
+                String idUsuarioStr = null;
+
+                // Opción 1: Directamente como hijo de <datos>
             if (eDatos.getChildText("idUsuario") != null) {
                 idUsuarioStr = eDatos.getChildText("idUsuario");
             }
@@ -151,7 +170,6 @@ ELIMINARUSUARIO {
             UsuarioBusiness ub = new UsuarioBusiness();
             ub.eliminar(idUsuario);
             
-            // Responder éxito al cliente
             Element eExito = new Element("resultado").addContent("OK");
             DataProtocolo dp = new DataProtocolo("ELIMINARUSUARIO_RESPUESTA", eExito);
             mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
@@ -199,19 +217,32 @@ ELIMINARUSUARIO {
         @Override
         public void accion(MiCliente mCliente, Element eDatos) {
             try {
-                System.out.println("Estoy en la accion ELIMINARTAREA");
-
                 int idTarea = Integer.parseInt(eDatos.getChild("idTarea").getValue());
 
                 TareaBusiness tb = new TareaBusiness();
+
+                Tarea tarea = tb.buscarPorId(idTarea);
+
+                if (tarea == null) {
+                    Element eRespuesta = new Element("respuesta");
+                    eRespuesta.addContent(new Element("resultado").setText("ERROR"));
+                    eRespuesta.addContent(new Element("mensaje").setText("No existe una tarea con el ID " + idTarea));
+
+                    DataProtocolo dp = new DataProtocolo("ELIMINARTAREA_RESPUESTA", eRespuesta);
+                    mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+                    return;
+                }
+
                 tb.eliminar(idTarea);
 
-                Element eExito = new Element("resultado").addContent("OK");
-                DataProtocolo dp = new DataProtocolo("ELIMINARTAREA_RESPUESTA", eExito);
+                Element eRespuesta = new Element("respuesta");
+                eRespuesta.addContent(new Element("resultado").setText("OK"));
+                eRespuesta.addContent(new Element("mensaje").setText("Tarea eliminada correctamente"));
+
+                DataProtocolo dp = new DataProtocolo("ELIMINARTAREA_RESPUESTA", eRespuesta);
                 mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
 
             } catch (SQLException ex) {
-                Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
                 enviarErrorAlCliente(mCliente, "ELIMINARTAREA", ex.getMessage());
             }
         }
@@ -226,6 +257,12 @@ ELIMINARUSUARIO {
 
                 TareaBusiness tb = new TareaBusiness();
                 Tarea tarea = tb.buscarPorId(idTarea);
+
+                if (tarea == null) {
+                    DataProtocolo dp = new DataProtocolo("CONSULTARTAREA", null);
+                    mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+                    return;
+}
 
                 DataProtocolo dp = new DataProtocolo("CONSULTARTAREA", tarea.toXMLElement());
                 mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
@@ -255,6 +292,8 @@ ELIMINARUSUARIO {
         @Override
         public void accion(MiCliente mCliente, Element eDatos) {
             /* Pendiente Sprint 4 */ }
+        
+        
     },INSERTARUSUARIO {
     @Override
     public void accion(MiCliente mCliente, Element eDatos) {
