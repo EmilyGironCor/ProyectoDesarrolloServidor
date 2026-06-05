@@ -13,50 +13,50 @@ import java.util.logging.Logger;
  * Enum del Protocolo del Servidor con respuestas activas hacia el cliente.
  */
 public enum EnumProtocolo {
-    LOGIN {
-        @Override
-        public void accion(MiCliente mCliente, Element eDatos) {
-            try {
-                System.out.println("Estoy en la accion LOGIN");
-
-                Usuario usuarioIncompleto = new Usuario();
-                // FIX: usar mapearCredencialesLogin en vez de toObject
-                // porque el cliente envía <usuario>admin</usuario><contrasena>123</contrasena>
-                // no un objeto usuario completo
-                usuarioIncompleto.mapearCredencialesLogin(eDatos);
-
-                System.out.println("Intentando verificar en BD a: " + usuarioIncompleto.getNombre());
-
-                UsuarioBusiness ub = new UsuarioBusiness();
-                Usuario usuarioReal = ub.verificarLogin(
-                        usuarioIncompleto.getNombre(),
-                        usuarioIncompleto.getContrasena()
-                );
-
-                DataProtocolo dp;
-                if (usuarioReal != null && usuarioReal.isEstado()) {
-                    System.out.println("LOGIN EXITOSO: " + usuarioReal.getNombre());
-                    dp = new DataProtocolo("LOGIN_EXITOSO", usuarioReal.toXMLElement());
-                } else {
-                    System.out.println("LOGIN FALLIDO");
-                    Element eError = new Element("error")
-                            .addContent("Usuario o contraseña incorrectos");
-                    dp = new DataProtocolo("LOGIN_FALLIDO", eError);
-                }
-
-                mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
-
-            } catch (SQLException ex) {
-                Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
-                Element eError = new Element("error").addContent("Error interno del servidor");
-                DataProtocolo dp = new DataProtocolo("LOGIN_FALLIDO", eError);
-                mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
-            }
-        }
-    },
+//    LOGIN {
+//        @Override
+//        public void accion(MiCliente mCliente, Element eDatos) {
+//            try {
+//                System.out.println("Estoy en la accion LOGIN");
+//
+//                Usuario usuarioIncompleto = new Usuario();
+//                // FIX: usar mapearCredencialesLogin en vez de toObject
+//                // porque el cliente envía <usuario>admin</usuario><contrasena>123</contrasena>
+//                // no un objeto usuario completo
+//                usuarioIncompleto.mapearCredencialesLogin(eDatos);
+//
+//                System.out.println("Intentando verificar en BD a: " + usuarioIncompleto.getNombre());
+//
+//                UsuarioBusiness ub = new UsuarioBusiness();
+//                Usuario usuarioReal = ub.verificarLogin(
+//                        usuarioIncompleto.getNombre(),
+//                        usuarioIncompleto.getContrasena()
+//                );
+//
+//                DataProtocolo dp;
+//                if (usuarioReal != null && usuarioReal.isEstado()) {
+//                    System.out.println("LOGIN EXITOSO: " + usuarioReal.getNombre());
+//                    dp = new DataProtocolo("LOGIN_EXITOSO", usuarioReal.toXMLElement());
+//                } else {
+//                    System.out.println("LOGIN FALLIDO");
+//                    Element eError = new Element("error")
+//                            .addContent("Usuario o contraseña incorrectos");
+//                    dp = new DataProtocolo("LOGIN_FALLIDO", eError);
+//                }
+//
+//                mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+//
+//            } catch (SQLException ex) {
+//                Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
+//                Element eError = new Element("error").addContent("Error interno del servidor");
+//                DataProtocolo dp = new DataProtocolo("LOGIN_FALLIDO", eError);
+//                mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+//            }
+//        }
+//    },
     INSERTARTAREA {
         @Override
-        public void accion(MiCliente mCliente, Element eDatos) {
+        public void accion(Cliente mCliente, Element eDatos) {
             try {
                 System.out.println("Estoy en la accion INSERTARTAREA");
 
@@ -111,10 +111,12 @@ public enum EnumProtocolo {
                 enviarErrorAlCliente(mCliente, "INSERTARTAREA", ex.getMessage());
             }
         }
+
+        
     },
     LISTARUSUARIO {
         @Override
-        public void accion(MiCliente mCliente, Element eDatos) {
+        public void accion(Cliente mCliente, Element eDatos) {
             try {
                 System.out.println("Estoy en la accion LISTARUSUARIO");
 
@@ -137,7 +139,7 @@ public enum EnumProtocolo {
     },
     ELIMINARUSUARIO {
         @Override
-        public void accion(MiCliente mCliente, Element eDatos) {
+        public void accion(Cliente mCliente, Element eDatos) {
             try {
                 System.out.println("=== ELIMINARUSUARIO ===");
                 System.out.println("XML recibido: " + Utility.GestionXML.xmlToString(eDatos));
@@ -192,7 +194,7 @@ public enum EnumProtocolo {
 },
     LISTARTAREA {
         @Override
-        public void accion(MiCliente mCliente, Element eDatos) {
+        public void accion(Cliente mCliente, Element eDatos) {
             try {
                 System.out.println("Estoy en la accion LISTARTAREA");
 
@@ -215,7 +217,7 @@ public enum EnumProtocolo {
     },
     ELIMINARTAREA {
         @Override
-        public void accion(MiCliente mCliente, Element eDatos) {
+        public void accion(Cliente mCliente, Element eDatos) {
             try {
                 int idTarea = Integer.parseInt(eDatos.getChild("idTarea").getValue());
 
@@ -249,7 +251,7 @@ public enum EnumProtocolo {
     },
     CONSULTARTAREA {
         @Override
-        public void accion(MiCliente mCliente, Element eDatos) {
+        public void accion(Cliente mCliente, Element eDatos) {
             try {
                 System.out.println("Estoy en la accion CONSULTARTAREA");
 
@@ -273,30 +275,62 @@ public enum EnumProtocolo {
             }
         }
     },
-    ANALIZARURL {
-        @Override
-        public void accion(MiCliente mCliente, Element eDatos) {
-            /* Pendiente Sprint 3 */ }
-    },
+   ANALIZARURL {
+    @Override
+        public void accion(Cliente mCliente, Element eDatos) {
+            try {
+                // Usar Tarea en lugar de AnalisisTarea
+                Tarea tarea = new Tarea();
+                
+                // Extraer el nodo tarea
+                Element eTarea = eDatos.getChild("tarea");
+                if (eTarea == null) {
+                    eTarea = eDatos; // Si eDatos es directamente la tarea
+                }
+                
+                tarea.toObject(eTarea);
+                
+                String urlObjetivo = tarea.getURL();
+                System.out.println("URL recibida para analizar: " + urlObjetivo);
+                
+                // Crear el analizador (necesitas implementar esta clase)
+                // AnalizadorLinks analizador = new AnalizadorLinks(urlObjetivo);
+                // analizador.start();
+                
+                Element eRespuesta = new Element("respuesta");
+                eRespuesta.addContent(new Element("resultado").setText("OK"));
+                eRespuesta.addContent(new Element("mensaje").setText(
+                        "Análisis iniciado para " + urlObjetivo
+                ));
+                
+                DataProtocolo dp = new DataProtocolo("ANALIZARURL_RESPUESTA", eRespuesta);
+                mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+                
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                enviarErrorAlCliente(mCliente, "ANALIZARURL", ex.getMessage());
+            }
+        }
+},
     CONSULTARRESULTADO {
         @Override
-        public void accion(MiCliente mCliente, Element eDatos) {
-            /* Pendiente Sprint 3 */ }
+        public void accion(Cliente mCliente, Element eDatos) {
+            /* Pendiente Sprint 3 ESTO ES DEL CLIENTE */ }
     },
     LISTARRESULTADOS {
         @Override
-        public void accion(MiCliente mCliente, Element eDatos) {
+        public void accion(Cliente mCliente, Element eDatos) {
             /* Pendiente Sprint 3 */ }
     },
     EXPORTARPDF {
         @Override
-        public void accion(MiCliente mCliente, Element eDatos) {
+        public void accion(Cliente mCliente, Element eDatos) {
             /* Pendiente Sprint 4 */ }
         
         
     },INSERTARUSUARIO {
     @Override
-    public void accion(MiCliente mCliente, Element eDatos) {
+    public void accion(Cliente mCliente, Element eDatos) {
         try {
             System.out.println("=== INSERTARUSUARIO ===");
             
@@ -364,7 +398,7 @@ public enum EnumProtocolo {
     }
 },BUSCARUSUARIO {
     @Override
-    public void accion(MiCliente mCliente, Element eDatos) {
+    public void accion(Cliente mcliente, Element eDatos) {
         try {
             System.out.println("=== BUSCARUSUARIO ===");
             
@@ -374,7 +408,7 @@ public enum EnumProtocolo {
                 Element eRespuesta = new Element("encontrado").setText("false");
                 eRespuesta.addContent(new Element("mensaje").setText("Nombre no proporcionado"));
                 DataProtocolo dp = new DataProtocolo("BUSCARUSUARIO", eRespuesta);
-                mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+                Cliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
                 return;
             }
             
@@ -396,7 +430,7 @@ public enum EnumProtocolo {
             }
             
             DataProtocolo dp = new DataProtocolo("BUSCARUSUARIO", eRespuesta);
-            mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+            Cliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
             
         } catch (SQLException ex) {
             System.err.println("Error SQL: " + ex.getMessage());
@@ -405,15 +439,15 @@ public enum EnumProtocolo {
             eError.addContent(new Element("encontrado").setText("false"));
             eError.addContent(new Element("error").setText(ex.getMessage()));
             DataProtocolo dp = new DataProtocolo("BUSCARUSUARIO", eError);
-            mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+            Cliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
         }
     }
 };
 
-    public abstract void accion(MiCliente mCliente, Element eDatos);
+    public abstract void accion(Cliente mCliente, Element eDatos);
 
     // Método utilitario interno para reportarle fallos de base de datos de manera limpia al cliente
-    private static void enviarErrorAlCliente(MiCliente mCliente, String accion, String mensajeError) {
+    private static void enviarErrorAlCliente(Cliente mCliente, String accion, String mensajeError) {
         Element eError = new Element("error").addContent(mensajeError);
         DataProtocolo dp = new DataProtocolo(accion + "_ERROR", eError);
         mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));

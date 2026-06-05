@@ -11,7 +11,7 @@ import org.jdom.Element;
  *
  * @author saray
  */
-public class Tarea {
+public class Tarea implements XMLConvertible {
 
     private int idTarea;
     private String nombreTarea;
@@ -22,7 +22,12 @@ public class Tarea {
     private Date fechaDeCreacion;
     private int cantidadDeHilos;
 
+    public Tarea(String url) {
+        this.URL = url;
+    }
+
     public Tarea() {
+
     }
 
     public Tarea(int idTarea, String nombreTarea, String URL, String estado, int idUsuarioCreador, int prioridad, Date fechaDeCreacion, int cantidadDeHilos) {
@@ -113,61 +118,61 @@ public class Tarea {
         return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea + ", URL=" + URL + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioEncargado + ", prioridad=" + prioridad + ", fechaDeCreacion=" + fechaDeCreacion + ", cantidadDeHilos=" + cantidadDeHilos + '}';
     }
 
-public void toObject(Element element) {
-    // Detectar si ya somos <tarea> o si hay que buscarlo dentro de <datos>
-    Element root = element.getName().equals("tarea") 
-                   ? element 
-                   : element.getChild("tarea");
+    public void toObject(Element element) {
+        // Detectar si ya somos <tarea> o si hay que buscarlo dentro de <datos>
+        Element root = element.getName().equals("tarea")
+                ? element
+                : element.getChild("tarea");
 
-    if (root == null) {
-        System.out.println("Error: No se encontró el nodo <tarea> en el XML recibido.");
-        return;
-    }
-
-    // idTarea (puede llegar en 0 si es nueva)
-    if (root.getChild("idTarea") != null) {
-        this.idTarea = Integer.parseInt(root.getChild("idTarea").getValue());
-    }
-
-    if (root.getChild("nombreTarea") != null) {
-        this.nombreTarea = root.getChild("nombreTarea").getValue();
-    }
-
-    if (root.getChild("URL") != null) {
-        this.URL = root.getChild("URL").getValue();
-    }
-
-    if (root.getChild("estado") != null) {
-        this.estado = root.getChild("estado").getValue();
-    } else {
-        this.estado = "pendiente"; // valor por defecto
-    }
-
-    if (root.getChild("idUsuarioCreador") != null) {
-        this.idUsuarioEncargado = Integer.parseInt(root.getChild("idUsuarioCreador").getValue());
-    }
-
-    if (root.getChild("prioridad") != null) {
-        this.prioridad = Integer.parseInt(root.getChild("prioridad").getValue());
-    }
-
-    // Fix 6 incluido: si no viene fecha, usar la actual
-    if (root.getChild("fechaDeCreacion") != null && 
-        !root.getChild("fechaDeCreacion").getValue().equals("null")) {
-        try {
-            this.fechaDeCreacion = new java.text.SimpleDateFormat("yyyy-MM-dd")
-                                       .parse(root.getChild("fechaDeCreacion").getValue());
-        } catch (Exception e) {
-            this.fechaDeCreacion = new java.util.Date(); // fallback a hoy
+        if (root == null) {
+            System.out.println("Error: No se encontró el nodo <tarea> en el XML recibido.");
+            return;
         }
-    } else {
-        this.fechaDeCreacion = new java.util.Date(); // asignar fecha actual
-    }
 
-    if (root.getChild("cantidadDeHilos") != null) {
-        this.cantidadDeHilos = Integer.parseInt(root.getChild("cantidadDeHilos").getValue());
+        // idTarea (puede llegar en 0 si es nueva)
+        if (root.getChild("idTarea") != null) {
+            this.idTarea = Integer.parseInt(root.getChild("idTarea").getValue());
+        }
+
+        if (root.getChild("nombreTarea") != null) {
+            this.nombreTarea = root.getChild("nombreTarea").getValue();
+        }
+
+        if (root.getChild("URL") != null) {
+            this.URL = root.getChild("URL").getValue();
+        }
+
+        if (root.getChild("estado") != null) {
+            this.estado = root.getChild("estado").getValue();
+        } else {
+            this.estado = "pendiente"; // valor por defecto
+        }
+
+        if (root.getChild("idUsuarioCreador") != null) {
+            this.idUsuarioEncargado = Integer.parseInt(root.getChild("idUsuarioCreador").getValue());
+        }
+
+        if (root.getChild("prioridad") != null) {
+            this.prioridad = Integer.parseInt(root.getChild("prioridad").getValue());
+        }
+
+        // Fix 6 incluido: si no viene fecha, usar la actual
+        if (root.getChild("fechaDeCreacion") != null
+                && !root.getChild("fechaDeCreacion").getValue().equals("null")) {
+            try {
+                this.fechaDeCreacion = new java.text.SimpleDateFormat("yyyy-MM-dd")
+                        .parse(root.getChild("fechaDeCreacion").getValue());
+            } catch (Exception e) {
+                this.fechaDeCreacion = new java.util.Date(); // fallback a hoy
+            }
+        } else {
+            this.fechaDeCreacion = new java.util.Date(); // asignar fecha actual
+        }
+
+        if (root.getChild("cantidadDeHilos") != null) {
+            this.cantidadDeHilos = Integer.parseInt(root.getChild("cantidadDeHilos").getValue());
+        }
     }
-}
 
     public Element toXMLElement() {
 

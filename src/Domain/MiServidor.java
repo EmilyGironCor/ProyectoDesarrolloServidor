@@ -25,8 +25,10 @@ public class MiServidor {
         while (true) {            
             Socket socket=this.serverSocket.accept();
             System.out.println("Cliente accept");
-            MiCliente miCliente=new MiCliente(socket);
-            miCliente.start();
+           // MiCliente miCliente=new MiCliente(socket);
+            MiClienteTrabajador trabajador= new MiClienteTrabajador(socket);
+            trabajador.start();
+           // miCliente.start();
         } // while
     } // escuchar
     

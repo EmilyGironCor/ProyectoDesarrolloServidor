@@ -4,46 +4,76 @@
  */
 package Domain;
 
+import Domain.DataProtocolo;
 import Domain.Resultado;
 import Domain.Tarea;
+import Utility.GestionXML;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.jdom.Element;
+import org.jdom.JDOMException;
 
 /**
  *
  * @author saray
  */
-public class MiClienteTrabajador {
-   private int idNodo;
-   private String ipCliente;
-   private int puerto;
-   private String esatdo;
-   private Socket socket;
-   private int cantidadTareasAsugnadas;
-   
-   public void conectar(){
-       
-   }
-   
-   public void desconectar(){
-       
-   }
-   
-   public void asignarTarea(Tarea tarea){
-       
-   }
-   
-   public Resultado recibirResultado(){
-       Resultado resultado =  new Resultado();
-       
-       return resultado;
-   }
-   public boolean estaDisponible(){
-       return false;
-   }
+public class MiClienteTrabajador extends Cliente {
 
-    @Override
-    public String toString() {
-        return "MiClienteTrabajador{" + "idNodo=" + idNodo + ", ipCliente=" + ipCliente + ", puerto=" + puerto + ", esatdo=" + esatdo + ", socket=" + socket + ", cantidadTareasAsugnadas=" + cantidadTareasAsugnadas + '}';
+    private Socket socket;
+    private BufferedReader recibir;
+    private PrintStream enviar;
+
+    public MiClienteTrabajador(Socket socket) throws IOException {
+        super(socket);
     }
-   
+
+   public void run() {
+    try {
+        Tarea analisis = new Tarea();
+        analisis.setIdTarea(1);
+        analisis.setURL("https://www.ucr.ac.cr/");
+        analisis.setNombreTarea("Analisis UCR");
+        analisis.setEstado("pendiente");
+        analisis.setPrioridad(1);
+        analisis.setCantidadDeHilos(3);
+
+        DataProtocolo dp = new DataProtocolo("ANALIZARURL", analisis.toXMLElement());
+
+        String stringXML = GestionXML.xmlToString(dp.geteAccion());
+
+        System.out.println("Enviando al trabajador:");
+        System.out.println(stringXML);
+
+        this.enviarDatos(stringXML);
+
+        do {
+            String xmlString = this.leerDatos();
+
+            if (xmlString == null) {
+                System.out.println("Cliente desconectado");
+                break;
+            }
+
+            System.out.println(xmlString);
+
+            Element eAccion = GestionXML.stringTOXML(xmlString);
+            String accion = eAccion.getAttributeValue("metodo");
+
+            EnumProtocolo enumProtocolo = EnumProtocolo.valueOf(accion);
+            enumProtocolo.accion(this, eAccion.getChild("datos"));
+
+        } while (true);
+
+    } catch (IOException ex) {
+        Logger.getLogger(MiClienteTrabajador.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (JDOMException ex) {
+        Logger.getLogger(MiClienteTrabajador.class.getName()).log(Level.SEVERE, null, ex);
+    }
+}
+
 }

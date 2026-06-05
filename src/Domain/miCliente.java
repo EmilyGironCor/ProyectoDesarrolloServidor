@@ -19,26 +19,10 @@ import org.jdom.JDOMException;
  *
  * @author Saray
  */
-public class MiCliente extends Thread {
-
-    private Socket socket;
-    private BufferedReader recibir;
-    private PrintStream enviar;
+public class MiCliente extends Cliente {
 
     public MiCliente(Socket socket) throws IOException {
-        this.socket = socket;
-        this.recibir = new BufferedReader(
-                new InputStreamReader(this.socket.getInputStream())
-        );
-        this.enviar = new PrintStream(this.socket.getOutputStream());
-    } // constructor
-
-    public void enviarDatos(String dato) {
-        this.enviar.println(dato);
-    }
-
-    public String leerDatos() throws IOException {
-        return this.recibir.readLine();
+        super(socket);
     }
 
     public void run() {
@@ -51,7 +35,7 @@ public class MiCliente extends Thread {
                     System.out.println("Cliente desconectado");
                     break;
                 }
-                
+
                 System.out.println(xmlString);
                 Element eAccion = GestionXML.stringTOXML(xmlString);
                 String accion = eAccion.getAttributeValue("metodo");

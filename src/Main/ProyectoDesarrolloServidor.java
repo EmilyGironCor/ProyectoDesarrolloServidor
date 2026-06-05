@@ -22,18 +22,9 @@ public class ProyectoDesarrolloServidor {
 
     public static void main(String[] args) throws Exception {
 
+        
         try {
-//            // ==========================================
-//            // PASO 1: Inicializar base de datos (crea tablas si no existen)
-//            // ==========================================
-//            System.out.println("=== VERIFICANDO BASE DE DATOS ===");
-//            UsuarioData usuarioData = new UsuarioData();
-//            usuarioData.inicializarBD();  // Solo crea la tabla si no existe y agrega admin si no hay usuarios
-//            System.out.println("✅ Base de datos lista");
 
-            // ==========================================
-            // PASO 2: Iniciar servidor
-            // ==========================================
             listarTodosLosUsuarios();
             System.out.println("=== INICIANDO SERVIDOR EN PUERTO 5025 ===");
             MiServidor miServidor = new MiServidor(5025);
