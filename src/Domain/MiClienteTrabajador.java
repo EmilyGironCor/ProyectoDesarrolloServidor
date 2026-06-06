@@ -27,6 +27,7 @@ public class MiClienteTrabajador extends Cliente {
     private Socket socket;
     private BufferedReader recibir;
     private PrintStream enviar;
+    
 
     public MiClienteTrabajador(Socket socket) throws IOException {
         super(socket);

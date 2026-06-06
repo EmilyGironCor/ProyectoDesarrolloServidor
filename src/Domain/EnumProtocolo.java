@@ -420,11 +420,11 @@ public enum EnumProtocolo {
             Element eRespuesta = new Element("respuesta");
             
             if (usuario != null) {
-                System.out.println("✅ Usuario encontrado: " + usuario.getNombre());
+                System.out.println("Usuario encontrado: " + usuario.getNombre());
                 eRespuesta.addContent(new Element("encontrado").setText("true"));
                 eRespuesta.addContent(usuario.toXMLElement());  // <usuario> va aparte
             } else {
-                System.out.println("❌ Usuario no encontrado: " + nombre);
+                System.out.println("Usuario no encontrado: " + nombre);
                 eRespuesta.addContent(new Element("encontrado").setText("false"));
                 eRespuesta.addContent(new Element("mensaje").setText("Usuario no encontrado"));
             }
