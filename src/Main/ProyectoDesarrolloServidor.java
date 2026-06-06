@@ -1,4 +1,4 @@
-/*
+ /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
  */
@@ -22,7 +22,6 @@ public class ProyectoDesarrolloServidor {
 
     public static void main(String[] args) throws Exception {
 
-        
         try {
 
             listarTodosLosUsuarios();
@@ -36,22 +35,22 @@ public class ProyectoDesarrolloServidor {
 
         }
     }
-    
-public static void listarTodosLosUsuarios() {
+
+    public static void listarTodosLosUsuarios() {
         try {
             System.out.println("\n=== LISTADO DE USUARIOS EN BASE DE DATOS ===");
-            
+
             UsuarioBusiness usuarioBusiness = new UsuarioBusiness();
             ArrayList<Usuario> usuarios = usuarioBusiness.leerTodo();
-            
+
             if (usuarios.isEmpty()) {
                 System.out.println("⚠️ No hay usuarios registrados en la base de datos.");
                 return;
             }
-            
+
             System.out.println("Total de usuarios: " + usuarios.size());
             System.out.println("--------------------------------------------------");
-            
+
             for (Usuario u : usuarios) {
                 System.out.println("ID: " + u.getId());
                 System.out.println("  Nombre: " + u.getNombre());
@@ -62,7 +61,7 @@ public static void listarTodosLosUsuarios() {
                 System.out.println("contra" + u.getContrasena());
                 System.out.println("--------------------------------------------------");
             }
-            
+
         } catch (SQLException ex) {
             System.err.println("Error al listar usuarios: " + ex.getMessage());
             ex.printStackTrace();

@@ -84,8 +84,8 @@ public class TareaData {
             pstmt.setString(3, tarea.getEstado());
             pstmt.setInt(4, tarea.getIdUsuarioCreador());
             pstmt.setInt(5, tarea.getPrioridad());
-            pstmt.setDate(6, new java.sql.Date(tarea.getFechaDeCreacion().getTime()));
-            pstmt.setInt(7, tarea.getCantidadDeHilos());
+
+            pstmt.setInt(6, tarea.getCantidadDeHilos());
             pstmt.execute();
         }
     }
@@ -112,7 +112,6 @@ public class TareaData {
                             rs.getString("estado"),
                             rs.getInt("idUsuarioCreador"),
                             rs.getInt("prioridad"),
-                            rs.getDate("fechaDeCreacion"),
                             rs.getInt("cantidadDeHilos")
                     );
                 }
@@ -145,7 +144,6 @@ public class TareaData {
                             rs.getString("estado"),
                             rs.getInt("idUsuarioCreador"),
                             rs.getInt("prioridad"),
-                            rs.getDate("fechaDeCreacion"),
                             rs.getInt("cantidadDeHilos")
                     ));
                 }
@@ -174,7 +172,6 @@ public class TareaData {
                         rs.getString("estado"),
                         rs.getInt("idUsuarioCreador"),
                         rs.getInt("prioridad"),
-                        rs.getDate("fechaDeCreacion"),
                         rs.getInt("cantidadDeHilos")
                 ));
             }
@@ -201,9 +198,9 @@ public class TareaData {
             pstmt.setString(3, tarea.getEstado());
             pstmt.setInt(4, tarea.getIdUsuarioCreador());
             pstmt.setInt(5, tarea.getPrioridad());
-            pstmt.setDate(6, new java.sql.Date(tarea.getFechaDeCreacion().getTime()));
-            pstmt.setInt(7, tarea.getCantidadDeHilos());
-            pstmt.setInt(8, tarea.getIdTarea());
+
+            pstmt.setInt(6, tarea.getCantidadDeHilos());
+            pstmt.setInt(7, tarea.getIdTarea());
             pstmt.execute();
         }
     }
