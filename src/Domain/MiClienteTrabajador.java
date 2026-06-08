@@ -24,9 +24,6 @@ import org.jdom.JDOMException;
  */
 public class MiClienteTrabajador extends Cliente {
 
-    private Socket socket;
-    private BufferedReader recibir;
-    private PrintStream enviar;
     private Tarea analisis;
 
     public MiClienteTrabajador(Socket socket) throws IOException {

@@ -15,9 +15,18 @@ public class Resultado {
     private int totalImagenes;
     private int totalEnlaces;
     private int totalProductos;
+    private int totalVideos;
 
     public int getIdResultado() {
         return idResultado;
+    }
+
+    public int getTotalVideos() {
+        return totalVideos;
+    }
+
+    public void setTotalVideos(int totalVideos) {
+        this.totalVideos = totalVideos;
     }
 
     public void setIdResultado(int idResultado) {

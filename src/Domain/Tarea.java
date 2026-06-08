@@ -20,7 +20,7 @@ public class Tarea implements XMLConvertible {
     private int idUsuarioEncargado;
     private int prioridad;
 
-    private int cantidadDeHilos;
+    
 
     public Tarea(String url) {
         this.URL = url;
@@ -30,7 +30,7 @@ public class Tarea implements XMLConvertible {
 
     }
 
-    public Tarea(int idTarea, String nombreTarea, String URL, String estado, int idUsuarioCreador, int prioridad, int cantidadDeHilos) {
+    public Tarea(int idTarea, String nombreTarea, String URL, String estado, int idUsuarioCreador, int prioridad) {
         this.idTarea = idTarea;
         this.nombreTarea = nombreTarea;
         this.URL = URL;
@@ -38,7 +38,7 @@ public class Tarea implements XMLConvertible {
         this.idUsuarioEncargado = idUsuarioCreador;
         this.prioridad = prioridad;
 
-        this.cantidadDeHilos = cantidadDeHilos;
+       
     }
 
     public int getIdTarea() {
@@ -89,13 +89,7 @@ public class Tarea implements XMLConvertible {
         this.prioridad = prioridad;
     }
 
-    public int getCantidadDeHilos() {
-        return cantidadDeHilos;
-    }
-
-    public void setCantidadDeHilos(int cantidadDeHilos) {
-        this.cantidadDeHilos = cantidadDeHilos;
-    }
+    
 
     public int getidUsuarioEncargado() {
         return idUsuarioEncargado;
@@ -107,7 +101,7 @@ public class Tarea implements XMLConvertible {
 
     @Override
     public String toString() {
-        return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea + ", URL=" + URL + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioEncargado + ", prioridad=" + prioridad + ", cantidadDeHilos=" + cantidadDeHilos + '}';
+        return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea + ", URL=" + URL + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioEncargado + ", prioridad=" + prioridad  + '}';
     }
 
     public void toObject(Element element) {
@@ -148,9 +142,6 @@ public class Tarea implements XMLConvertible {
             this.prioridad = Integer.parseInt(root.getChild("prioridad").getValue());
         }
 
-        if (root.getChild("cantidadDeHilos") != null) {
-            this.cantidadDeHilos = Integer.parseInt(root.getChild("cantidadDeHilos").getValue());
-        }
     }
 
     public Element toXMLElement() {
@@ -175,8 +166,7 @@ public class Tarea implements XMLConvertible {
         Element ePrioridad = new Element("prioridad");
         ePrioridad.addContent(String.valueOf(this.prioridad));
 
-        Element eCantidadHilos = new Element("cantidadDeHilos");
-        eCantidadHilos.addContent(String.valueOf(this.cantidadDeHilos));
+       
 
         eTarea.addContent(eIdTarea);
         eTarea.addContent(eNombreTarea);
@@ -184,7 +174,7 @@ public class Tarea implements XMLConvertible {
         eTarea.addContent(eEstado);
         eTarea.addContent(eIdUsuarioCreador);
         eTarea.addContent(ePrioridad);
-        eTarea.addContent(eCantidadHilos);
+        
 
         return eTarea;
     }

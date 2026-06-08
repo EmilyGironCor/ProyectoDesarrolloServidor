@@ -54,6 +54,7 @@ public class ResultadoData {
                 + "totalImagenes INTEGER NOT NULL,"
                 + "totalEnlaces INTEGER NOT NULL,"
                 + "totalProductos INTEGER NOT NULL,"
+                + "totalVideos INTEGER NOT NULL, "
                 + "FOREIGN KEY (idTarea) REFERENCES tarea(idTarea)"
                 + ")";
         try (Connection conn = this.cdb.conectar(); Statement stmt = conn.createStatement();) {
@@ -69,17 +70,19 @@ public class ResultadoData {
      * @throws SQLException Si ocurre un error durante la ejecución de la
      * sentencia SQL
      */
-    public void insertar(Resultado resultado) throws SQLException {
-        String sql = "INSERT INTO resultado(idTarea, fecha, totalImagenes, totalEnlaces, totalProductos) VALUES(?,?,?,?,?)";
-        try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, resultado.getIdTarea());
-            pstmt.setString(2, resultado.getFecha());
-            pstmt.setInt(3, resultado.getTotalImagenes());
-            pstmt.setInt(4, resultado.getTotalEnlaces());
-            pstmt.setInt(5, resultado.getTotalProductos());
-            pstmt.execute();
-        }
+  public void insertar(Resultado resultado) throws SQLException {
+   
+    String sql = "INSERT INTO resultado(idTarea, fecha, totalImagenes, totalEnlaces, totalProductos, totalVideos) VALUES(?,?,?,?,?,?)";
+    try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        pstmt.setInt(1, resultado.getIdTarea());
+        pstmt.setString(2, resultado.getFecha());
+        pstmt.setInt(3, resultado.getTotalImagenes());
+        pstmt.setInt(4, resultado.getTotalEnlaces());
+        pstmt.setInt(5, resultado.getTotalProductos());
+        pstmt.setInt(6, resultado.getTotalVideos());  
+        pstmt.execute();
     }
+}
 
     /**
      * Obtiene un resultado a partir de su identificador único.
@@ -103,6 +106,7 @@ public class ResultadoData {
                     resultado.setTotalImagenes(rs.getInt("totalImagenes"));
                     resultado.setTotalEnlaces(rs.getInt("totalEnlaces"));
                     resultado.setTotalProductos(rs.getInt("totalProductos"));
+                    resultado.setTotalVideos(rs.getInt("totalVideos"));
                     return resultado;
                 }
             }
@@ -134,6 +138,7 @@ public class ResultadoData {
                     resultado.setTotalImagenes(rs.getInt("totalImagenes"));
                     resultado.setTotalEnlaces(rs.getInt("totalEnlaces"));
                     resultado.setTotalProductos(rs.getInt("totalProductos"));
+                    resultado.setTotalVideos(rs.getInt("totalVideos"));
                     return resultado;
                 }
             }
@@ -162,6 +167,7 @@ public class ResultadoData {
                 resultado.setTotalImagenes(rs.getInt("totalImagenes"));
                 resultado.setTotalEnlaces(rs.getInt("totalEnlaces"));
                 resultado.setTotalProductos(rs.getInt("totalProductos"));
+                resultado.setTotalVideos(rs.getInt("totalVideos"));
                 resultados.add(resultado);
             }
         }
@@ -178,19 +184,20 @@ public class ResultadoData {
      * @throws SQLException Si ocurre un error durante la ejecución de la
      * sentencia SQL
      */
-    public void actualizar(Resultado resultado) throws SQLException {
-        String sql = "UPDATE resultado SET idTarea = ?, fecha = ?, totalImagenes = ?, totalEnlaces = ?, totalProductos = ? WHERE idResultado = ?";
-        try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, resultado.getIdTarea());
-            pstmt.setString(2, resultado.getFecha());
-            pstmt.setInt(3, resultado.getTotalImagenes());
-            pstmt.setInt(4, resultado.getTotalEnlaces());
-            pstmt.setInt(5, resultado.getTotalProductos());
-            pstmt.setInt(6, resultado.getIdResultado());
-            pstmt.execute();
-        }
+  public void actualizar(Resultado resultado) throws SQLException {
+  
+    String sql = "UPDATE resultado SET idTarea = ?, fecha = ?, totalImagenes = ?, totalEnlaces = ?, totalProductos = ?, totalVideos = ? WHERE idResultado = ?";
+    try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        pstmt.setInt(1, resultado.getIdTarea());
+        pstmt.setString(2, resultado.getFecha());
+        pstmt.setInt(3, resultado.getTotalImagenes());
+        pstmt.setInt(4, resultado.getTotalEnlaces());
+        pstmt.setInt(5, resultado.getTotalProductos());
+        pstmt.setInt(6, resultado.getTotalVideos());
+        pstmt.setInt(7, resultado.getIdResultado());
+        pstmt.execute();
     }
-
+}
     /**
      * Elimina un resultado de la base de datos a partir de su identificador.
      *
@@ -222,6 +229,19 @@ public class ResultadoData {
         try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, idTarea);
             pstmt.execute();
+        }
+    }
+
+    public void migrarAgregarColumnaVideos() throws SQLException {
+        String sql = "ALTER TABLE resultado ADD COLUMN totalVideos INTEGER DEFAULT 0";
+        try (Connection conn = this.cdb.conectar(); Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+            System.out.println("✅ Columna 'totalVideos' agregada a la tabla resultado");
+        } catch (SQLException e) {
+            if (!e.getMessage().contains("duplicate column name")) {
+                throw e;
+            }
+            System.out.println("La columna 'totalVideos' ya existe");
         }
     }
 }//fin clase

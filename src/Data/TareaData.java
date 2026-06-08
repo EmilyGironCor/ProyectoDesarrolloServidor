@@ -50,7 +50,14 @@ public class TareaData {
      * @throws SQLException Si ocurre un error durante la ejecución de la
      * sentencia SQL
      */
-    public void inicializarBD() throws SQLException {
+   public void inicializarBD() throws SQLException {
+    Connection conn = null;
+    Statement stmt = null;
+    try {
+        conn = this.cdb.conectar();
+        stmt = conn.createStatement();
+        
+        // Crear tabla si no existe (estructura NUEVA)
         String sql = "CREATE TABLE IF NOT EXISTS tarea ("
                 + "idTarea INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + "nombreTarea TEXT NOT NULL,"
@@ -58,37 +65,68 @@ public class TareaData {
                 + "estado TEXT NOT NULL,"
                 + "idUsuarioCreador INTEGER NOT NULL,"
                 + "prioridad INTEGER NOT NULL,"
-                + "fechaDeCreacion DATE NOT NULL,"
-                + "cantidadDeHilos INTEGER NOT NULL,"
                 + "FOREIGN KEY (idUsuarioCreador) REFERENCES usuario(idUsuario)"
                 + ")";
-        try (Connection conn = this.cdb.conectar(); Statement stmt = conn.createStatement();) {
-            stmt.execute(sql);
+        stmt.execute(sql);
+//        
+//        // Verificar si existe la columna fechaDeCreacion (tabla vieja)
+//        try {
+//            stmt.execute("SELECT fechaDeCreacion FROM tarea LIMIT 1");
+//            // Si llegamos aquí, la columna existe → hay que migrar
+//            System.out.println("⚠️ Tabla con estructura antigua detectada. Migrando...");
+//            
+//            // SQLite no soporta DROP COLUMN directamente, hay que recrear
+//            stmt.execute("DROP TABLE IF EXISTS tarea_temp");
+//            stmt.execute("CREATE TABLE tarea_temp AS SELECT idTarea, nombreTarea, URL, estado, idUsuarioCreador, prioridad FROM tarea");
+//            stmt.execute("DROP TABLE tarea");
+//            stmt.execute("ALTER TABLE tarea_temp RENAME TO tarea");
+//            
+//            System.out.println("✅ Migración completada");
+//        } catch (SQLException e) {
+//            // La columna no existe, tabla ya está bien
+//            System.out.println("✅ Tabla tarea ya tiene estructura correcta");
+//        }
+        
+    } catch (SQLException e) {
+        System.err.println("Error al inicializar tabla tarea: " + e.getMessage());
+        throw e;
+    } finally {
+        if (stmt != null) try { stmt.close(); } catch (SQLException e) {}
+        if (conn != null) try { conn.close(); } catch (SQLException e) {}
+    }
+}
+
+  /**
+ * Inserta una nueva tarea en la base de datos y retorna el ID generado.
+ *
+ * @param tarea Objeto Tarea que contiene los datos a insertar
+ * @return int ID generado automáticamente
+ * @throws SQLException Si ocurre un error durante la ejecución de la sentencia SQL
+ */
+public int insertar(Tarea tarea) throws SQLException {
+    String sql = "INSERT INTO tarea(nombreTarea, URL, estado, idUsuarioCreador, prioridad) VALUES(?,?,?,?,?)";
+    try (Connection conn = this.cdb.conectar(); 
+         PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        
+        pstmt.setString(1, tarea.getNombreTarea());
+        pstmt.setString(2, tarea.getURL());
+        pstmt.setString(3, tarea.getEstado());
+        pstmt.setInt(4, tarea.getIdUsuarioCreador());
+        pstmt.setInt(5, tarea.getPrioridad());
+        pstmt.execute();
+        
+        // Obtener el ID generado automáticamente
+        try (ResultSet rs = pstmt.getGeneratedKeys()) {
+            if (rs.next()) {
+                int idGenerado = rs.getInt(1);
+                System.out.println(" Tarea insertada con ID: " + idGenerado);
+                return idGenerado;
+            } else {
+                throw new SQLException("No se pudo obtener el ID generado");
+            }
         }
     }
-
-    /**
-     * Inserta una nueva tarea en la base de datos. Convierte la fecha de
-     * creación de java.util.Date a java.sql.Date para poder almacenarla
-     * correctamente en la base de datos.
-     *
-     * @param tarea Objeto Tarea que contiene los datos a insertar
-     * @throws SQLException Si ocurre un error durante la ejecución de la
-     * sentencia SQL
-     */
-    public void insertar(Tarea tarea) throws SQLException {
-        String sql = "INSERT INTO tarea(nombreTarea, URL, estado, idUsuarioCreador, prioridad, fechaDeCreacion, cantidadDeHilos) VALUES(?,?,?,?,?,?,?)";
-        try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, tarea.getNombreTarea());
-            pstmt.setString(2, tarea.getURL());
-            pstmt.setString(3, tarea.getEstado());
-            pstmt.setInt(4, tarea.getIdUsuarioCreador());
-            pstmt.setInt(5, tarea.getPrioridad());
-
-            pstmt.setInt(6, tarea.getCantidadDeHilos());
-            pstmt.execute();
-        }
-    }
+}
 
     /**
      * Obtiene una tarea a partir de su identificador único.
@@ -111,8 +149,7 @@ public class TareaData {
                             rs.getString("URL"),
                             rs.getString("estado"),
                             rs.getInt("idUsuarioCreador"),
-                            rs.getInt("prioridad"),
-                            rs.getInt("cantidadDeHilos")
+                            rs.getInt("prioridad")
                     );
                 }
             }
@@ -143,8 +180,7 @@ public class TareaData {
                             rs.getString("URL"),
                             rs.getString("estado"),
                             rs.getInt("idUsuarioCreador"),
-                            rs.getInt("prioridad"),
-                            rs.getInt("cantidadDeHilos")
+                            rs.getInt("prioridad")
                     ));
                 }
             }
@@ -171,8 +207,7 @@ public class TareaData {
                         rs.getString("URL"),
                         rs.getString("estado"),
                         rs.getInt("idUsuarioCreador"),
-                        rs.getInt("prioridad"),
-                        rs.getInt("cantidadDeHilos")
+                        rs.getInt("prioridad")
                 ));
             }
         }
@@ -191,16 +226,14 @@ public class TareaData {
      * sentencia SQL
      */
     public void actualizar(Tarea tarea) throws SQLException {
-        String sql = "UPDATE tarea SET nombreTarea = ?, URL = ?, estado = ?, idUsuarioCreador = ?, prioridad = ?, fechaDeCreacion = ?, cantidadDeHilos = ? WHERE idTarea = ?";
+        String sql = "UPDATE tarea SET nombreTarea = ?, URL = ?, estado = ?, idUsuarioCreador = ?, prioridad = ? WHERE idTarea = ?";
         try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, tarea.getNombreTarea());
             pstmt.setString(2, tarea.getURL());
             pstmt.setString(3, tarea.getEstado());
             pstmt.setInt(4, tarea.getIdUsuarioCreador());
             pstmt.setInt(5, tarea.getPrioridad());
-
-            pstmt.setInt(6, tarea.getCantidadDeHilos());
-            pstmt.setInt(7, tarea.getIdTarea());
+            pstmt.setInt(6, tarea.getIdTarea());
             pstmt.execute();
         }
     }
