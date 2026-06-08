@@ -3,6 +3,7 @@ package Domain;
 import Business.TareaBusiness;
 import Business.UsuarioBusiness;
 import Data.ProductoData;
+import Data.ResultadoData;
 import Utility.GestionXML;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -57,7 +58,6 @@ public enum EnumProtocolo {
             }
         }
 
-       
     },
     INSERTARTAREA {
         @Override
@@ -102,12 +102,12 @@ public enum EnumProtocolo {
                 tarea.setidUsuarioEncargado(encargado.getId());
 
                 TareaBusiness tb = new TareaBusiness();
-                tb.insertar(tarea);
+                int idTarea = tb.insertar(tarea);
 
                 Element eRespuesta = new Element("respuesta");
                 eRespuesta.addContent(new Element("resultado").setText("OK"));
                 eRespuesta.addContent(new Element("mensaje").setText("Tarea registrada correctamente"));
-
+                eRespuesta.addContent(new Element("idTarea").setText(String.valueOf(idTarea)));
                 DataProtocolo dp = new DataProtocolo("INSERTARTAREA_RESPUESTA", eRespuesta);
                 mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
 
@@ -277,91 +277,145 @@ public enum EnumProtocolo {
             }
         }
     },
-    ANALIZARURL {
-        @Override
-        public void accion(Cliente mCliente, Element eDatos) {
-            try {
+ ANALIZARURL {
+    @Override
+    public void accion(Cliente mCliente, Element eDatos) {
+        try {
+            String idTarea = eDatos.getChildText("idTarea");
+            if (idTarea == null) {
                 Element eTarea = eDatos.getChild("tarea");
-
-                if (eTarea == null) {
-                    eTarea = eDatos;
+                if (eTarea != null) {
+                    idTarea = eTarea.getChildText("idTarea");
                 }
-
-                String idTarea = eTarea.getChildText("idTarea");
-
-                TareaBusiness business = new TareaBusiness();
-
-                Tarea tarea = business.buscarPorId(
-                        Integer.parseInt(idTarea)
-                );
-
-                if (tarea == null) {
-                    enviarErrorAlCliente(
-                            mCliente,
-                            "ANALIZARURL",
-                            "No existe la tarea con ID " + idTarea
-                    );
-                    return;
-                }
-
-                String urlObjetivo = tarea.getURL();
-
-                System.out.println("URL recibida para analizar: " + urlObjetivo);
-
-                DataProtocolo dpTrabajador
-                        = new DataProtocolo(
-                                "ANALIZARURL",
-                                tarea.toXMLElement()
-                        );
-
-                String xmlTrabajador
-                        = Utility.GestionXML.xmlToString(
-                                dpTrabajador.geteAccion()
-                        );
-
-                System.out.println("Enviando tarea al trabajador:");
-                System.out.println(xmlTrabajador);
-
-                MiServidor.getTrabajador().enviarDatos(xmlTrabajador);
-
-                Element eRespuesta = new Element("respuesta");
-                eRespuesta.addContent(new Element("resultado").setText("OK"));
-                eRespuesta.addContent(new Element("mensaje").setText(
-                        "Análisis enviado al trabajador para " + urlObjetivo
-                ));
-
-                DataProtocolo dp
-                        = new DataProtocolo(
-                                "ANALIZARURL_RESPUESTA",
-                                eRespuesta
-                        );
-
-                mCliente.enviarDatos(
-                        Utility.GestionXML.xmlToString(
-                                dp.geteAccion()
-                        )
-                );
-
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                enviarErrorAlCliente(
-                        mCliente,
-                        "ANALIZARURL",
-                        ex.getMessage()
-                );
             }
+            
+            TareaBusiness business = new TareaBusiness();
+            Tarea tarea = business.buscarPorId(Integer.parseInt(idTarea));
+
+            if (tarea == null) {
+                enviarErrorAlCliente(mCliente, "ANALIZARURL", "No existe la tarea con ID " + idTarea);
+                return;
+            }
+
+            // Verificar que el trabajador esté conectado
+            MiClienteTrabajador trabajador = MiServidor.getTrabajador();
+            if (trabajador == null) {
+                enviarErrorAlCliente(mCliente, "ANALIZARURL", "No hay trabajadores disponibles");
+                return;
+            }
+
+            // Enviar tarea al trabajador
+            DataProtocolo dpTrabajador = new DataProtocolo("ANALIZARURL", tarea.toXMLElement());
+            String xmlTrabajador = Utility.GestionXML.xmlToString(dpTrabajador.geteAccion());
+            trabajador.enviarDatos(xmlTrabajador);
+
+            // ✅ NUEVO: Responder al cliente que el análisis comenzó
+            Element eRespuesta = new Element("respuesta");
+            eRespuesta.addContent(new Element("nombreTarea").setText(tarea.getNombreTarea()));
+            eRespuesta.addContent(new Element("URL").setText(tarea.getURL()));
+            eRespuesta.addContent(new Element("estado").setText("En progreso"));
+            
+            DataProtocolo dpCliente = new DataProtocolo("ANALIZARURL", eRespuesta);
+            mCliente.enviarDatos(Utility.GestionXML.xmlToString(dpCliente.geteAccion()));
+
+            System.out.println("✅ Tarea enviada al trabajador y confirmación enviada al cliente");
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            enviarErrorAlCliente(mCliente, "ANALIZARURL", ex.getMessage());
         }
-    },
+    }
+},GUARDAR_RESULTADO {
+    @Override
+    public void accion(Cliente mCliente, Element eDatos) {
+        try {
+            System.out.println("=== GUARDAR_RESULTADO ===");
+            
+            Element eResultado = eDatos.getChild("resultado");
+            if (eResultado == null) {
+                eResultado = eDatos;
+            }
+            
+            String idTareaStr = eResultado.getChildText("idTarea");
+            String totalEnlacesStr = eResultado.getChildText("totalEnlaces");
+            String totalImagenesStr = eResultado.getChildText("totalImagenes");
+            String totalVideosStr = eResultado.getChildText("totalVideos");  // ← NUEVO
+            String totalProductosStr = eResultado.getChildText("totalProductos");
+            
+            if (idTareaStr == null) {
+                System.err.println("Error: No se recibió idTarea");
+                return;
+            }
+            
+            int idTarea = Integer.parseInt(idTareaStr);
+            int totalEnlaces = Integer.parseInt(totalEnlacesStr != null ? totalEnlacesStr : "0");
+            int totalImagenes = Integer.parseInt(totalImagenesStr != null ? totalImagenesStr : "0");
+            int totalVideos = Integer.parseInt(totalVideosStr != null ? totalVideosStr : "0");  // ← NUEVO
+            int totalProductos = Integer.parseInt(totalProductosStr != null ? totalProductosStr : "0");
+            
+            // Crear objeto Resultado
+            Resultado resultado = new Resultado();
+            resultado.setIdTarea(idTarea);
+            resultado.setFecha(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
+            resultado.setTotalEnlaces(totalEnlaces);
+            resultado.setTotalImagenes(totalImagenes);
+            resultado.setTotalVideos(totalVideos);  // ← NUEVO
+            resultado.setTotalProductos(totalProductos);
+            
+            // Guardar en BD
+            ResultadoData resultadoData = new ResultadoData();
+            resultadoData.insertar(resultado);
+            
+            // Actualizar estado de la tarea
+            TareaBusiness tareaBusiness = new TareaBusiness();
+            Tarea tarea = tareaBusiness.buscarPorId(idTarea);
+            if (tarea != null) {
+                tarea.setEstado("completada");
+                tareaBusiness.actualizar(tarea);
+            }
+            
+            System.out.println(" Resultado guardado - Videos: " + totalVideos);
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
+            enviarErrorAlCliente(mCliente, "GUARDAR_RESULTADO", ex.getMessage());
+        }
+    }
+},
     CONSULTARRESULTADO {
         @Override
         public void accion(Cliente mCliente, Element eDatos) {
             /* Pendiente Sprint 3 ESTO ES DEL CLIENTE */ }
     },
     LISTARRESULTADOS {
-        @Override
-        public void accion(Cliente mCliente, Element eDatos) {
-            /* Pendiente Sprint 3 */ }
-    },
+    @Override
+    public void accion(Cliente mCliente, Element eDatos) {
+        try {
+            ResultadoData resultadoData = new ResultadoData();
+            ArrayList<Resultado> resultados = resultadoData.obtenerTodos();
+            
+            Element eResultados = new Element("resultados");
+            for (Resultado r : resultados) {
+                Element eResultado = new Element("resultado");
+                eResultado.addContent(new Element("idResultado").setText(String.valueOf(r.getIdResultado())));
+                eResultado.addContent(new Element("idTarea").setText(String.valueOf(r.getIdTarea())));
+                eResultado.addContent(new Element("fecha").setText(r.getFecha()));
+                eResultado.addContent(new Element("totalEnlaces").setText(String.valueOf(r.getTotalEnlaces())));
+                eResultado.addContent(new Element("totalImagenes").setText(String.valueOf(r.getTotalImagenes())));
+                eResultado.addContent(new Element("totalProductos").setText(String.valueOf(r.getTotalProductos())));
+                eResultado.addContent(new Element("totalVideos").setText(String.valueOf(r.getTotalVideos())));  // ← NUEVO
+                eResultados.addContent(eResultado);
+            }
+            
+            DataProtocolo dp = new DataProtocolo("LISTARRESULTADOS", eResultados);
+            mCliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
+            enviarErrorAlCliente(mCliente, "LISTARRESULTADOS", ex.getMessage());
+        }
+    }
+},
     GUARDAR_PRODUCTOS {
         @Override
         public void accion(Cliente mCliente, Element eDatos) {
@@ -478,7 +532,7 @@ public enum EnumProtocolo {
                     Element eRespuesta = new Element("encontrado").setText("false");
                     eRespuesta.addContent(new Element("mensaje").setText("Nombre no proporcionado"));
                     DataProtocolo dp = new DataProtocolo("BUSCARUSUARIO", eRespuesta);
-                    Cliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+                    mcliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
                     return;
                 }
 
@@ -500,7 +554,7 @@ public enum EnumProtocolo {
                 }
 
                 DataProtocolo dp = new DataProtocolo("BUSCARUSUARIO", eRespuesta);
-                Cliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+                mcliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
 
             } catch (SQLException ex) {
                 System.err.println("Error SQL: " + ex.getMessage());
@@ -509,7 +563,7 @@ public enum EnumProtocolo {
                 eError.addContent(new Element("encontrado").setText("false"));
                 eError.addContent(new Element("error").setText(ex.getMessage()));
                 DataProtocolo dp = new DataProtocolo("BUSCARUSUARIO", eError);
-                Cliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
+                mcliente.enviarDatos(Utility.GestionXML.xmlToString(dp.geteAccion()));
             }
         }
     };
