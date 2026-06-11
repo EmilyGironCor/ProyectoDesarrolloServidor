@@ -24,49 +24,57 @@ import org.jdom.JDOMException;
  */
 public class MiClienteTrabajador extends Cliente {
 
-    private Tarea analisis;
+    private Socket socket;
+    private BufferedReader recibir;
+    private PrintStream enviar;
+    
 
     public MiClienteTrabajador(Socket socket) throws IOException {
         super(socket);
-        this.analisis = null;
     }
 
-    public void run() {
-        try {
+   public void run() {
+    try {
+        Tarea analisis = new Tarea();
+        analisis.setIdTarea(1);
+        analisis.setURL("https://www.ucr.ac.cr/");
+        analisis.setNombreTarea("Analisis UCR");
+        analisis.setEstado("pendiente");
+        analisis.setPrioridad(1);
+        analisis.setCantidadDeHilos(3);
 
-        
+        DataProtocolo dp = new DataProtocolo("ANALIZARURL", analisis.toXMLElement());
 
-            do {
-                String xmlString = this.leerDatos();
+        String stringXML = GestionXML.xmlToString(dp.geteAccion());
 
-                if (xmlString == null) {
-                    System.out.println("Cliente desconectado");
-                    break;
-                }
+        System.out.println("Enviando al trabajador:");
+        System.out.println(stringXML);
 
-                System.out.println(xmlString);
+        this.enviarDatos(stringXML);
 
-                Element eAccion = GestionXML.stringTOXML(xmlString);
-                String accion = eAccion.getAttributeValue("metodo");
+        do {
+            String xmlString = this.leerDatos();
 
-                EnumProtocolo enumProtocolo = EnumProtocolo.valueOf(accion);
-                enumProtocolo.accion(this, eAccion.getChild("datos"));
+            if (xmlString == null) {
+                System.out.println("Cliente desconectado");
+                break;
+            }
 
-            } while (true);
+            System.out.println(xmlString);
 
-        } catch (IOException ex) {
-            Logger.getLogger(MiClienteTrabajador.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (JDOMException ex) {
-            Logger.getLogger(MiClienteTrabajador.class.getName()).log(Level.SEVERE, null, ex);
-        }
+            Element eAccion = GestionXML.stringTOXML(xmlString);
+            String accion = eAccion.getAttributeValue("metodo");
+
+            EnumProtocolo enumProtocolo = EnumProtocolo.valueOf(accion);
+            enumProtocolo.accion(this, eAccion.getChild("datos"));
+
+        } while (true);
+
+    } catch (IOException ex) {
+        Logger.getLogger(MiClienteTrabajador.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (JDOMException ex) {
+        Logger.getLogger(MiClienteTrabajador.class.getName()).log(Level.SEVERE, null, ex);
     }
+}
 
-    public Tarea getAnalisis() {
-        return analisis;
-    }
-
-    public void setAnalisis(Tarea analisis) {
-        this.analisis = analisis;
-    }
-
-}//fin clases
+}
