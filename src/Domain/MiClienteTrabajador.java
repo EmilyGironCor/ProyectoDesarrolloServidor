@@ -24,14 +24,16 @@ import org.jdom.JDOMException;
  */
 public class MiClienteTrabajador extends Cliente {
 
-    private Tarea analisis;
+    private Socket socket;
+    private BufferedReader recibir;
+    private PrintStream enviar;
+    
 
     public MiClienteTrabajador(Socket socket) throws IOException {
         super(socket);
-        this.analisis = null;
     }
 
-    public void run() {
+   public void run() {
         try {
 
         
@@ -61,12 +63,4 @@ public class MiClienteTrabajador extends Cliente {
         }
     }
 
-    public Tarea getAnalisis() {
-        return analisis;
-    }
-
-    public void setAnalisis(Tarea analisis) {
-        this.analisis = analisis;
-    }
-
-}//fin clases
+}

@@ -19,6 +19,7 @@ public class Tarea implements XMLConvertible {
     private String estado;
     private int idUsuarioEncargado;
     private int prioridad;
+    private String descripcion;
 
     
 
@@ -30,16 +31,27 @@ public class Tarea implements XMLConvertible {
 
     }
 
-    public Tarea(int idTarea, String nombreTarea, String URL, String estado, int idUsuarioCreador, int prioridad) {
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public Tarea(int idTarea, String nombreTarea, String URL, String estado, int idUsuarioEncargado, int prioridad, String descripcion) {
         this.idTarea = idTarea;
         this.nombreTarea = nombreTarea;
         this.URL = URL;
         this.estado = estado;
-        this.idUsuarioEncargado = idUsuarioCreador;
+        this.idUsuarioEncargado = idUsuarioEncargado;
         this.prioridad = prioridad;
-
-       
+        this.descripcion = descripcion;
     }
+
+  
+
+  
 
     public int getIdTarea() {
         return idTarea;
