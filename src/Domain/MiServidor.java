@@ -42,7 +42,7 @@ public class MiServidor {
                 this.trabajador.start();
             } else {
                 System.out.println("Cliente conectado");
-                MiCliente miCliente = new MiCliente(socket);
+                miCliente miCliente = new miCliente(socket);
                 miCliente.start();
             }
         }

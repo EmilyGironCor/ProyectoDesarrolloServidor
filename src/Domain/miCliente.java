@@ -19,9 +19,9 @@ import org.jdom.JDOMException;
  *
  * @author Saray
  */
-public class MiCliente extends Cliente {
+public class miCliente extends Cliente {
 
-    public MiCliente(Socket socket) throws IOException {
+    public miCliente(Socket socket) throws IOException {
         super(socket);
     }
 
@@ -46,15 +46,15 @@ public class MiCliente extends Cliente {
             } while (true);
 
         } catch (IOException ex) {
-            Logger.getLogger(MiCliente.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(miCliente.class.getName()).log(Level.SEVERE, null, ex);
         } catch (JDOMException ex) {
-            Logger.getLogger(MiCliente.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(miCliente.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             if (recibir != null) {
                 try {
                     recibir.close();
                 } catch (IOException ex) {
-                    Logger.getLogger(MiCliente.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(miCliente.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
             if (enviar != null) {
@@ -64,7 +64,7 @@ public class MiCliente extends Cliente {
                 try {
                     socket.close();
                 } catch (IOException ex) {
-                    Logger.getLogger(MiCliente.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(miCliente.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
