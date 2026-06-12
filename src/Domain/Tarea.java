@@ -4,7 +4,6 @@
  */
 package Domain;
 
-import java.util.Date;
 import org.jdom.Element;
 
 /**
@@ -20,8 +19,6 @@ public class Tarea implements XMLConvertible {
     private int idUsuarioEncargado;
     private int prioridad;
     private String descripcion;
-
-    
 
     public Tarea(String url) {
         this.URL = url;
@@ -48,10 +45,6 @@ public class Tarea implements XMLConvertible {
         this.prioridad = prioridad;
         this.descripcion = descripcion;
     }
-
-  
-
-  
 
     public int getIdTarea() {
         return idTarea;
@@ -101,8 +94,6 @@ public class Tarea implements XMLConvertible {
         this.prioridad = prioridad;
     }
 
-    
-
     public int getidUsuarioEncargado() {
         return idUsuarioEncargado;
     }
@@ -113,7 +104,7 @@ public class Tarea implements XMLConvertible {
 
     @Override
     public String toString() {
-        return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea + ", URL=" + URL + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioEncargado + ", prioridad=" + prioridad  + '}';
+        return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea + ", URL=" + URL + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioEncargado + ", prioridad=" + prioridad + '}';
     }
 
     public void toObject(Element element) {
@@ -154,6 +145,10 @@ public class Tarea implements XMLConvertible {
             this.prioridad = Integer.parseInt(root.getChild("prioridad").getValue());
         }
 
+        if (root.getChild("descripcion") != null) {
+            this.descripcion = root.getChild("descripcion").getValue();
+        }
+
     }
 
     public Element toXMLElement() {
@@ -178,7 +173,8 @@ public class Tarea implements XMLConvertible {
         Element ePrioridad = new Element("prioridad");
         ePrioridad.addContent(String.valueOf(this.prioridad));
 
-       
+        Element eDescripcion = new Element("descripcion");
+        eDescripcion.addContent(this.descripcion != null ? this.descripcion : "");
 
         eTarea.addContent(eIdTarea);
         eTarea.addContent(eNombreTarea);
@@ -186,7 +182,7 @@ public class Tarea implements XMLConvertible {
         eTarea.addContent(eEstado);
         eTarea.addContent(eIdUsuarioCreador);
         eTarea.addContent(ePrioridad);
-        
+        eTarea.addContent(eDescripcion);
 
         return eTarea;
     }

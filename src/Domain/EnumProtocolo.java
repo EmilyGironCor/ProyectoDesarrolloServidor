@@ -102,9 +102,15 @@ public enum EnumProtocolo {
                 DataProtocolo dp = new DataProtocolo("INSERTARTAREA_RESPUESTA", eRespuesta);
                 mCliente.enviarDatos(GestionXML.xmlToString(dp.geteAccion()));
 
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
                 Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
-                enviarErrorAlCliente(mCliente, "INSERTARTAREA", ex.getMessage());
+
+                Element eRespuesta = new Element("respuesta");
+                eRespuesta.addContent(new Element("resultado").setText("ERROR"));
+                eRespuesta.addContent(new Element("mensaje").setText("Error al registrar tarea: " + ex.getMessage()));
+
+                DataProtocolo dp = new DataProtocolo("INSERTARTAREA_RESPUESTA", eRespuesta);
+                mCliente.enviarDatos(GestionXML.xmlToString(dp.geteAccion()));
             }
         }
     },
@@ -355,11 +361,17 @@ public enum EnumProtocolo {
             try {
                 System.out.println("BUSCAR_PRODUCTOS recibido");
 
+//                String idTarea = eDatos.getChildText("idTarea");
+//                String termino = eDatos.getChildText("termino");
+//
+//                if (idTarea == null || termino == null) {
+//                    enviarErrorAlCliente(mCliente, "BUSCAR_PRODUCTOS", "Faltan parámetros");
+//                    return;
+//                }
                 String idTarea = eDatos.getChildText("idTarea");
-                String termino = eDatos.getChildText("termino");
 
-                if (idTarea == null || termino == null) {
-                    enviarErrorAlCliente(mCliente, "BUSCAR_PRODUCTOS", "Faltan parámetros");
+                if (idTarea == null) {
+                    enviarErrorAlCliente(mCliente, "BUSCAR_PRODUCTOS", "Falta el ID de la tarea");
                     return;
                 }
 
@@ -368,6 +380,13 @@ public enum EnumProtocolo {
 
                 if (tarea == null) {
                     enviarErrorAlCliente(mCliente, "BUSCAR_PRODUCTOS", "Tarea no encontrada");
+                    return;
+                }
+
+                String termino = tarea.getDescripcion();
+
+                if (termino == null || termino.trim().isEmpty()) {
+                    enviarErrorAlCliente(mCliente, "BUSCAR_PRODUCTOS", "La tarea no tiene descripción");
                     return;
                 }
 
@@ -381,7 +400,7 @@ public enum EnumProtocolo {
                 Element eBusqueda = new Element("busqueda");
                 eBusqueda.addContent(new Element("idTarea").setText(idTarea));
                 eBusqueda.addContent(new Element("url").setText(tarea.getURL()));
-                eBusqueda.addContent(new Element("termino").setText(termino));
+                eBusqueda.addContent(new Element("termino").setText(termino.trim()));
 
                 DataProtocolo dp = new DataProtocolo("BUSCAR_PRODUCTOS", eBusqueda);
                 worker.enviarDatos(GestionXML.xmlToString(dp.geteAccion()));
@@ -408,7 +427,8 @@ public enum EnumProtocolo {
             try {
                 System.out.println("GUARDAR_PRODUCTOS recibido del worker");
 
-                String idTarea = eDatos.getChildText("idTarea");
+//                String idTarea = eDatos.getChildText("idTarea");
+//                Element eListaProductos = eDatos.getChild("listaProductos");
                 Element eListaProductos = eDatos.getChild("listaProductos");
 
                 if (eListaProductos == null) {
@@ -419,6 +439,15 @@ public enum EnumProtocolo {
                     return;
                 }
 
+                String idTarea = eListaProductos.getChildText("idTarea");
+
+                System.out.println("Tarea: " + idTarea);
+                System.out.println("Cantidad de enlaces: " + eListaProductos.getChildText("totalEnlaces"));
+                System.out.println("Cantidad de imagenes: " + eListaProductos.getChildText("totalImagenes"));
+                System.out.println("Cantidad de videos: " + eListaProductos.getChildText("totalVideos"));
+                System.out.println("Cantidad de productos: " + eListaProductos.getChildren("producto").size());
+
+
                 List<Element> eProductos = eListaProductos.getChildren("producto");
                 ProductoData productoData = new ProductoData();
 
@@ -426,7 +455,13 @@ public enum EnumProtocolo {
                     Producto p = new Producto();
                     p.toObject(eProducto);
                     productoData.insertar(p);
-                    System.out.println("  Producto guardado: " + p.getDescripcion());
+
+                    System.out.println(
+                            "Producto guardado: "
+                            + p.getDescripcion()
+                            + " | Precio: "
+                            + p.getPrecio()
+                    );
                 }
 
                 System.out.println(eProductos.size() + " productos guardados para tarea " + idTarea);
