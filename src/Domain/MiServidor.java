@@ -4,7 +4,9 @@
  */
 package Domain;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -19,22 +21,32 @@ public class MiServidor {
 
     public MiServidor(int puerto) throws IOException {
         this.serverSocket = new ServerSocket(puerto);
-    } // constructor
+    }
 
     public void escuchar() throws IOException {
-        System.out.println("Servidor run");
+        System.out.println("Servidor corriendo...");
+
         while (true) {
             Socket socket = this.serverSocket.accept();
-            System.out.println("Cliente accept");
+
+            // Leer el mensaje de identificación sin cerrar el stream
+            BufferedReader identificador = new BufferedReader(
+                new InputStreamReader(socket.getInputStream())
+            );
             
-            MiCliente miCliente = new MiCliente(socket);
-            miCliente.start();
+            String tipo = identificador.readLine(); 
 
-            this.trabajador = new MiClienteTrabajador(socket);
-            trabajador.start();
-
-        } // while
-    } // escuchar
+            if ("TRABAJADOR".equalsIgnoreCase(tipo)) {
+                System.out.println("Trabajador conectado");
+                this.trabajador = new MiClienteTrabajador(socket);
+                this.trabajador.start();
+            } else {
+                System.out.println("Cliente conectado");
+                miCliente miCliente = new miCliente(socket);
+                miCliente.start();
+            }
+        }
+    }
 
     public static MiClienteTrabajador getTrabajador() {
         return trabajador;

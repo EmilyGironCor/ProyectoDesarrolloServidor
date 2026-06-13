@@ -27,14 +27,13 @@ public class MiClienteTrabajador extends Cliente {
     private Socket socket;
     private BufferedReader recibir;
     private PrintStream enviar;
-    private Tarea analisis;
+    
 
     public MiClienteTrabajador(Socket socket) throws IOException {
         super(socket);
-        this.analisis = null;
     }
 
-    public void run() {
+   public void run() {
         try {
 
         
@@ -64,12 +63,4 @@ public class MiClienteTrabajador extends Cliente {
         }
     }
 
-    public Tarea getAnalisis() {
-        return analisis;
-    }
-
-    public void setAnalisis(Tarea analisis) {
-        this.analisis = analisis;
-    }
-
-}//fin clases
+}

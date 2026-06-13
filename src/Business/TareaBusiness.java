@@ -22,8 +22,8 @@ public class TareaBusiness {
         this.tareaData.inicializarBD();
     }
 
-    public void insertar(Tarea tarea) throws SQLException {
-        this.tareaData.insertar(tarea);
+    public int insertar(Tarea tarea) throws SQLException {
+       return this.tareaData.insertar(tarea);
     }
 
     public ArrayList<Tarea> leerTodo() throws SQLException {
