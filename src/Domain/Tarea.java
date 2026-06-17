@@ -4,7 +4,7 @@
  */
 package Domain;
 
-import java.util.Date;
+import java.util.ArrayList;
 import org.jdom.Element;
 
 /**
@@ -15,31 +15,45 @@ public class Tarea implements XMLConvertible {
 
     private int idTarea;
     private String nombreTarea;
-    private String URL;
+    private String URL;  // Mantenemos para compatibilidad (será la primera URL)
     private String estado;
     private int idUsuarioEncargado;
     private int prioridad;
     private String descripcion;
-
     
+    // NUEVOS CAMPOS
+    private ArrayList<String> urls;  // Lista de múltiples URLs
+    private boolean analizarImagenes;
+    private boolean analizarVideos;
+    private boolean analizarLinks;
+    private boolean analizarProductos;
+    private boolean analizarServicios;
 
+    // Constructores
     public Tarea(String url) {
         this.URL = url;
+        this.urls = new ArrayList<>();
+        if (url != null && !url.isEmpty()) {
+            this.urls.add(url);
+        }
+        this.analizarImagenes = true;
+        this.analizarVideos = true;
+        this.analizarLinks = true;
+        this.analizarProductos = false;
+        this.analizarServicios = false;
     }
 
     public Tarea() {
-
+        this.urls = new ArrayList<>();
+        this.analizarImagenes = true;
+        this.analizarVideos = true;
+        this.analizarLinks = true;
+        this.analizarProductos = false;
+        this.analizarServicios = false;
     }
 
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-
-    public Tarea(int idTarea, String nombreTarea, String URL, String estado, int idUsuarioEncargado, int prioridad, String descripcion) {
+    public Tarea(int idTarea, String nombreTarea, String URL, String estado, 
+                 int idUsuarioEncargado, int prioridad, String descripcion) {
         this.idTarea = idTarea;
         this.nombreTarea = nombreTarea;
         this.URL = URL;
@@ -47,11 +61,49 @@ public class Tarea implements XMLConvertible {
         this.idUsuarioEncargado = idUsuarioEncargado;
         this.prioridad = prioridad;
         this.descripcion = descripcion;
+        this.urls = new ArrayList<>();
+        if (URL != null && !URL.isEmpty()) {
+            this.urls.add(URL);
+        }
+        this.analizarImagenes = true;
+        this.analizarVideos = true;
+        this.analizarLinks = true;
+        this.analizarProductos = false;
+        this.analizarServicios = false;
+    }
+    
+    // Constructor completo con todas las opciones
+    public Tarea(int idTarea, String nombreTarea, ArrayList<String> urls, String estado,
+                 int idUsuarioEncargado, int prioridad, String descripcion,
+                 boolean analizarImagenes, boolean analizarVideos, 
+                 boolean analizarLinks, boolean analizarProductos, boolean analizarServicios) {
+        this.idTarea = idTarea;
+        this.nombreTarea = nombreTarea;
+        this.urls = urls != null ? urls : new ArrayList<>();
+        this.estado = estado;
+        this.idUsuarioEncargado = idUsuarioEncargado;
+        this.prioridad = prioridad;
+        this.descripcion = descripcion;
+        this.analizarImagenes = analizarImagenes;
+        this.analizarVideos = analizarVideos;
+        this.analizarLinks = analizarLinks;
+        this.analizarProductos = analizarProductos;
+        this.analizarServicios = analizarServicios;
+        
+        // Mantener URL por compatibilidad (primera URL)
+        if (!this.urls.isEmpty()) {
+            this.URL = this.urls.get(0);
+        }
     }
 
-  
+    // Getters y Setters originales
+    public String getDescripcion() {
+        return descripcion;
+    }
 
-  
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
 
     public int getIdTarea() {
         return idTarea;
@@ -75,6 +127,13 @@ public class Tarea implements XMLConvertible {
 
     public void setURL(String URL) {
         this.URL = URL;
+        // Mantener sincronizada la lista de URLs
+        if (this.urls == null) {
+            this.urls = new ArrayList<>();
+        }
+        if (!this.urls.contains(URL) && URL != null && !URL.isEmpty()) {
+            this.urls.add(0, URL);
+        }
     }
 
     public String getEstado() {
@@ -101,8 +160,6 @@ public class Tarea implements XMLConvertible {
         this.prioridad = prioridad;
     }
 
-    
-
     public int getidUsuarioEncargado() {
         return idUsuarioEncargado;
     }
@@ -110,12 +167,78 @@ public class Tarea implements XMLConvertible {
     public void setidUsuarioEncargado(int dUsuarioEncargado) {
         this.idUsuarioEncargado = dUsuarioEncargado;
     }
+    
+    // NUEVOS GETTERS Y SETTERS
+    public ArrayList<String> getUrls() {
+        return urls;
+    }
+    
+    public void setUrls(ArrayList<String> urls) {
+        this.urls = urls;
+        if (urls != null && !urls.isEmpty()) {
+            this.URL = urls.get(0);
+        }
+    }
+    
+    public void addUrl(String url) {
+        if (this.urls == null) {
+            this.urls = new ArrayList<>();
+        }
+        this.urls.add(url);
+        if (this.URL == null || this.URL.isEmpty()) {
+            this.URL = url;
+        }
+    }
+    
+    public boolean isAnalizarImagenes() {
+        return analizarImagenes;
+    }
+    
+    public void setAnalizarImagenes(boolean analizarImagenes) {
+        this.analizarImagenes = analizarImagenes;
+    }
+    
+    public boolean isAnalizarVideos() {
+        return analizarVideos;
+    }
+    
+    public void setAnalizarVideos(boolean analizarVideos) {
+        this.analizarVideos = analizarVideos;
+    }
+    
+    public boolean isAnalizarLinks() {
+        return analizarLinks;
+    }
+    
+    public void setAnalizarLinks(boolean analizarLinks) {
+        this.analizarLinks = analizarLinks;
+    }
+    
+    public boolean isAnalizarProductos() {
+        return analizarProductos;
+    }
+    
+    public void setAnalizarProductos(boolean analizarProductos) {
+        this.analizarProductos = analizarProductos;
+    }
+    
+    public boolean isAnalizarServicios() {
+        return analizarServicios;
+    }
+    
+    public void setAnalizarServicios(boolean analizarServicios) {
+        this.analizarServicios = analizarServicios;
+    }
 
     @Override
     public String toString() {
-        return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea + ", URL=" + URL + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioEncargado + ", prioridad=" + prioridad  + '}';
+        return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea 
+                + ", urls=" + (urls != null ? urls.size() : 0) 
+                + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioEncargado 
+                + ", prioridad=" + prioridad + '}';
     }
 
+    @Override
     public void toObject(Element element) {
         // Detectar si ya somos <tarea> o si hay que buscarlo dentro de <datos>
         Element root = element.getName().equals("tarea")
@@ -127,68 +250,128 @@ public class Tarea implements XMLConvertible {
             return;
         }
 
-        // idTarea (puede llegar en 0 si es nueva)
-        if (root.getChild("idTarea") != null) {
-            this.idTarea = Integer.parseInt(root.getChild("idTarea").getValue());
+        // idTarea
+        if (root.getChildText("idTarea") != null && !root.getChildText("idTarea").isEmpty()) {
+            try {
+                this.idTarea = Integer.parseInt(root.getChildText("idTarea"));
+            } catch (NumberFormatException e) {
+                this.idTarea = 0;
+            }
         }
 
-        if (root.getChild("nombreTarea") != null) {
-            this.nombreTarea = root.getChild("nombreTarea").getValue();
+        // nombreTarea
+        if (root.getChildText("nombreTarea") != null) {
+            this.nombreTarea = root.getChildText("nombreTarea");
         }
 
-        if (root.getChild("URL") != null) {
-            this.URL = root.getChild("URL").getValue();
+        // URL (compatibilidad)
+        if (root.getChildText("URL") != null) {
+            this.URL = root.getChildText("URL");
         }
 
-        if (root.getChild("estado") != null) {
-            this.estado = root.getChild("estado").getValue();
+        // LEER LISTA DE URLs - CORREGIDO (usa Object para evitar problemas con List)
+        Element eUrls = root.getChild("urls");
+        if (eUrls != null) {
+            this.urls = new ArrayList<>();
+            for (Object obj : eUrls.getChildren("url")) {
+                Element eUrl = (Element) obj;
+                String urlValue = eUrl.getValue();
+                if (urlValue != null && !urlValue.isEmpty()) {
+                    this.urls.add(urlValue);
+                }
+            }
+            // Si no se encontró la lista pero hay URL individual
+        } else if (this.URL != null && !this.URL.isEmpty()) {
+            this.urls = new ArrayList<>();
+            this.urls.add(this.URL);
         } else {
-            this.estado = "pendiente"; // valor por defecto
+            this.urls = new ArrayList<>();
         }
 
-        if (root.getChild("idUsuarioCreador") != null) {
-            this.idUsuarioEncargado = Integer.parseInt(root.getChild("idUsuarioCreador").getValue());
+        // estado
+        if (root.getChildText("estado") != null) {
+            this.estado = root.getChildText("estado");
+        } else {
+            this.estado = "pendiente";
         }
 
-        if (root.getChild("prioridad") != null) {
-            this.prioridad = Integer.parseInt(root.getChild("prioridad").getValue());
+        // idUsuarioCreador
+        if (root.getChildText("idUsuarioCreador") != null) {
+            try {
+                this.idUsuarioEncargado = Integer.parseInt(root.getChildText("idUsuarioCreador"));
+            } catch (NumberFormatException e) {
+                this.idUsuarioEncargado = 0;
+            }
         }
 
+        // prioridad
+        if (root.getChildText("prioridad") != null) {
+            try {
+                this.prioridad = Integer.parseInt(root.getChildText("prioridad"));
+            } catch (NumberFormatException e) {
+                this.prioridad = 5;
+            }
+        }
+
+        // descripcion
+        if (root.getChildText("descripcion") != null) {
+            this.descripcion = root.getChildText("descripcion");
+        }
+        
+        // LEER OPCIONES DE ANÁLISIS
+        Element eOpciones = root.getChild("opcionesAnalisis");
+        if (eOpciones != null) {
+            String img = eOpciones.getChildText("analizarImagenes");
+            if (img != null) this.analizarImagenes = Boolean.parseBoolean(img);
+            
+            String vid = eOpciones.getChildText("analizarVideos");
+            if (vid != null) this.analizarVideos = Boolean.parseBoolean(vid);
+            
+            String link = eOpciones.getChildText("analizarLinks");
+            if (link != null) this.analizarLinks = Boolean.parseBoolean(link);
+            
+            String prod = eOpciones.getChildText("analizarProductos");
+            if (prod != null) this.analizarProductos = Boolean.parseBoolean(prod);
+            
+            String serv = eOpciones.getChildText("analizarServicios");
+            if (serv != null) this.analizarServicios = Boolean.parseBoolean(serv);
+        }
     }
 
+    @Override
     public Element toXMLElement() {
-
         Element eTarea = new Element("tarea");
 
-        Element eIdTarea = new Element("idTarea");
-        eIdTarea.addContent(String.valueOf(this.idTarea));
-
-        Element eNombreTarea = new Element("nombreTarea");
-        eNombreTarea.addContent(this.nombreTarea);
-
-        Element eURL = new Element("URL");
-        eURL.addContent(this.URL);
-
-        Element eEstado = new Element("estado");
-        eEstado.addContent(this.estado);
-
-        Element eIdUsuarioCreador = new Element("idUsuarioCreador");
-        eIdUsuarioCreador.addContent(String.valueOf(this.idUsuarioEncargado));
-
-        Element ePrioridad = new Element("prioridad");
-        ePrioridad.addContent(String.valueOf(this.prioridad));
-
-       
-
-        eTarea.addContent(eIdTarea);
-        eTarea.addContent(eNombreTarea);
-        eTarea.addContent(eURL);
-        eTarea.addContent(eEstado);
-        eTarea.addContent(eIdUsuarioCreador);
-        eTarea.addContent(ePrioridad);
+        // Campos básicos
+        eTarea.addContent(new Element("idTarea").setText(String.valueOf(this.idTarea)));
+        eTarea.addContent(new Element("nombreTarea").setText(this.nombreTarea != null ? this.nombreTarea : ""));
+        eTarea.addContent(new Element("estado").setText(this.estado != null ? this.estado : "pendiente"));
+        eTarea.addContent(new Element("idUsuarioCreador").setText(String.valueOf(this.idUsuarioEncargado)));
+        eTarea.addContent(new Element("prioridad").setText(String.valueOf(this.prioridad)));
+        eTarea.addContent(new Element("descripcion").setText(this.descripcion != null ? this.descripcion : ""));
         
+        // ENVIAR LISTA DE URLs
+        Element eUrls = new Element("urls");
+        if (this.urls != null) {
+            for (String url : this.urls) {
+                if (url != null && !url.isEmpty()) {
+                    eUrls.addContent(new Element("url").setText(url));
+                }
+            }
+        } else if (this.URL != null && !this.URL.isEmpty()) {
+            eUrls.addContent(new Element("url").setText(this.URL));
+        }
+        eTarea.addContent(eUrls);
+        
+        // ENVIAR OPCIONES DE ANÁLISIS
+        Element eOpciones = new Element("opcionesAnalisis");
+        eOpciones.addContent(new Element("analizarImagenes").setText(String.valueOf(analizarImagenes)));
+        eOpciones.addContent(new Element("analizarVideos").setText(String.valueOf(analizarVideos)));
+        eOpciones.addContent(new Element("analizarLinks").setText(String.valueOf(analizarLinks)));
+        eOpciones.addContent(new Element("analizarProductos").setText(String.valueOf(analizarProductos)));
+        eOpciones.addContent(new Element("analizarServicios").setText(String.valueOf(analizarServicios)));
+        eTarea.addContent(eOpciones);
 
         return eTarea;
     }
-
 }

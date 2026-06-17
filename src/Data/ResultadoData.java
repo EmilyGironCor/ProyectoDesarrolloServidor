@@ -41,7 +41,7 @@ public class ResultadoData {
      * (formato texto) - totalImagenes: cantidad total de imágenes encontradas
      * en la tarea - totalEnlaces: cantidad total de enlaces encontrados en la
      * tarea - totalProductos: cantidad total de productos identificados en la
-     * tarea
+     * tarea - totalVideos: cantidad total de videos encontrados
      *
      * @throws SQLException Si ocurre un error durante la ejecución de la
      * sentencia SQL
@@ -50,6 +50,7 @@ public class ResultadoData {
         String sql = "CREATE TABLE IF NOT EXISTS resultado ("
                 + "idResultado INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + "idTarea INTEGER NOT NULL,"
+                + "url TEXT," 
                 + "fecha TEXT NOT NULL,"
                 + "totalImagenes INTEGER NOT NULL,"
                 + "totalEnlaces INTEGER NOT NULL,"
@@ -59,6 +60,16 @@ public class ResultadoData {
                 + ")";
         try (Connection conn = this.cdb.conectar(); Statement stmt = conn.createStatement();) {
             stmt.execute(sql);
+            // Intentar agregar columna url si no existe
+            try {
+                stmt.execute("ALTER TABLE resultado ADD COLUMN url TEXT");
+                System.out.println("✅ Columna 'url' agregada a tabla resultado");
+            } catch (SQLException e) {
+                if (!e.getMessage().contains("duplicate column name")) {
+                    // Si es otro error, mostrarlo
+                    System.out.println("Columna 'url' ya existe o error: " + e.getMessage());
+                }
+            }
         }
     }
 
@@ -70,19 +81,70 @@ public class ResultadoData {
      * @throws SQLException Si ocurre un error durante la ejecución de la
      * sentencia SQL
      */
-  public void insertar(Resultado resultado) throws SQLException {
-   
-    String sql = "INSERT INTO resultado(idTarea, fecha, totalImagenes, totalEnlaces, totalProductos, totalVideos) VALUES(?,?,?,?,?,?)";
-    try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-        pstmt.setInt(1, resultado.getIdTarea());
-        pstmt.setString(2, resultado.getFecha());
-        pstmt.setInt(3, resultado.getTotalImagenes());
-        pstmt.setInt(4, resultado.getTotalEnlaces());
-        pstmt.setInt(5, resultado.getTotalProductos());
-        pstmt.setInt(6, resultado.getTotalVideos());  
-        pstmt.execute();
+    public void insertar(Resultado resultado) throws SQLException {
+        String sql = "INSERT INTO resultado(idTarea, fecha, totalImagenes, totalEnlaces, totalProductos, totalVideos) VALUES(?,?,?,?,?,?)";
+        try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, resultado.getIdTarea());
+            pstmt.setString(2, resultado.getFecha());
+            pstmt.setInt(3, resultado.getTotalImagenes());
+            pstmt.setInt(4, resultado.getTotalEnlaces());
+            pstmt.setInt(5, resultado.getTotalProductos());
+            pstmt.setInt(6, resultado.getTotalVideos());  
+            pstmt.execute();
+        }
     }
-}
+    
+    /**
+     * NUEVO MÉTODO: Inserta un resultado asociado a una URL específica.
+     * Útil cuando se analizan múltiples URLs por tarea.
+     *
+     * @param resultado Objeto Resultado que contiene los datos a insertar
+     * @param url La URL específica que se analizó
+     * @throws SQLException Si ocurre un error durante la ejecución de la sentencia SQL
+     */
+    public void insertarPorUrl(Resultado resultado, String url) throws SQLException {
+        String sql = "INSERT INTO resultado(idTarea, url, fecha, totalImagenes, totalEnlaces, totalProductos, totalVideos) VALUES(?,?,?,?,?,?,?)";
+        try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, resultado.getIdTarea());
+            pstmt.setString(2, url);
+            pstmt.setString(3, resultado.getFecha());
+            pstmt.setInt(4, resultado.getTotalImagenes());
+            pstmt.setInt(5, resultado.getTotalEnlaces());
+            pstmt.setInt(6, resultado.getTotalProductos());
+            pstmt.setInt(7, resultado.getTotalVideos());
+            pstmt.execute();
+            System.out.println("✅ Resultado guardado para URL: " + url);
+        }
+    }
+    
+    /**
+     * NUEVO MÉTODO: Obtiene todos los resultados asociados a una URL específica.
+     *
+     * @param url La URL a buscar
+     * @return ArrayList con los resultados de esa URL
+     * @throws SQLException Si ocurre un error durante la ejecución de la sentencia SQL
+     */
+    public ArrayList<Resultado> obtenerPorUrl(String url) throws SQLException {
+        ArrayList<Resultado> resultados = new ArrayList<>();
+        String sql = "SELECT * FROM resultado WHERE url = ?";
+        try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, url);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Resultado resultado = new Resultado();
+                    resultado.setIdResultado(rs.getInt("idResultado"));
+                    resultado.setIdTarea(rs.getInt("idTarea"));
+                    resultado.setFecha(rs.getString("fecha"));
+                    resultado.setTotalImagenes(rs.getInt("totalImagenes"));
+                    resultado.setTotalEnlaces(rs.getInt("totalEnlaces"));
+                    resultado.setTotalProductos(rs.getInt("totalProductos"));
+                    resultado.setTotalVideos(rs.getInt("totalVideos"));
+                    resultados.add(resultado);
+                }
+            }
+        }
+        return resultados;
+    }
 
     /**
      * Obtiene un resultado a partir de su identificador único.
@@ -184,20 +246,20 @@ public class ResultadoData {
      * @throws SQLException Si ocurre un error durante la ejecución de la
      * sentencia SQL
      */
-  public void actualizar(Resultado resultado) throws SQLException {
-  
-    String sql = "UPDATE resultado SET idTarea = ?, fecha = ?, totalImagenes = ?, totalEnlaces = ?, totalProductos = ?, totalVideos = ? WHERE idResultado = ?";
-    try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-        pstmt.setInt(1, resultado.getIdTarea());
-        pstmt.setString(2, resultado.getFecha());
-        pstmt.setInt(3, resultado.getTotalImagenes());
-        pstmt.setInt(4, resultado.getTotalEnlaces());
-        pstmt.setInt(5, resultado.getTotalProductos());
-        pstmt.setInt(6, resultado.getTotalVideos());
-        pstmt.setInt(7, resultado.getIdResultado());
-        pstmt.execute();
+    public void actualizar(Resultado resultado) throws SQLException {
+        String sql = "UPDATE resultado SET idTarea = ?, fecha = ?, totalImagenes = ?, totalEnlaces = ?, totalProductos = ?, totalVideos = ? WHERE idResultado = ?";
+        try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, resultado.getIdTarea());
+            pstmt.setString(2, resultado.getFecha());
+            pstmt.setInt(3, resultado.getTotalImagenes());
+            pstmt.setInt(4, resultado.getTotalEnlaces());
+            pstmt.setInt(5, resultado.getTotalProductos());
+            pstmt.setInt(6, resultado.getTotalVideos());
+            pstmt.setInt(7, resultado.getIdResultado());
+            pstmt.execute();
+        }
     }
-}
+    
     /**
      * Elimina un resultado de la base de datos a partir de su identificador.
      *
@@ -232,6 +294,12 @@ public class ResultadoData {
         }
     }
 
+    /**
+     * Migra la tabla resultado agregando la columna totalVideos si no existe.
+     *
+     * @throws SQLException Si ocurre un error durante la ejecución de la
+     * sentencia SQL
+     */
     public void migrarAgregarColumnaVideos() throws SQLException {
         String sql = "ALTER TABLE resultado ADD COLUMN totalVideos INTEGER DEFAULT 0";
         try (Connection conn = this.cdb.conectar(); Statement stmt = conn.createStatement()) {
@@ -244,4 +312,23 @@ public class ResultadoData {
             System.out.println("La columna 'totalVideos' ya existe");
         }
     }
-}//fin clase
+    
+    /**
+     * Migra la tabla resultado agregando la columna url si no existe.
+     *
+     * @throws SQLException Si ocurre un error durante la ejecución de la
+     * sentencia SQL
+     */
+    public void migrarAgregarColumnaUrl() throws SQLException {
+        String sql = "ALTER TABLE resultado ADD COLUMN url TEXT";
+        try (Connection conn = this.cdb.conectar(); Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+            System.out.println("✅ Columna 'url' agregada a la tabla resultado");
+        } catch (SQLException e) {
+            if (!e.getMessage().contains("duplicate column name")) {
+                throw e;
+            }
+            System.out.println("La columna 'url' ya existe");
+        }
+    }
+}
