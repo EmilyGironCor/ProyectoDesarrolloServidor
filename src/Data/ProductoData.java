@@ -217,9 +217,9 @@ public class ProductoData {
      * sentencia SQL
      */
     public void eliminar(int idProducto) throws SQLException {
-        String sql = "DELETE FROM producto WHERE idProducto = ?";
+        String sql = "DELETE FROM producto ";
         try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, idProducto);
+          //  pstmt.setInt(1, idProducto);
             pstmt.execute();
         }
     }
