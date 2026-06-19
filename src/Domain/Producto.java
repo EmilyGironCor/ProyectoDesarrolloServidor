@@ -88,8 +88,16 @@ public class Producto implements XMLConvertible {
         this.precio = Double.parseDouble(element.getChildText("precio"));
         this.descripcion = element.getChildText("descripcion");
         this.URL = element.getChildText("URL");
+        
+        String urlTexto = element.getChildText("URL");
 
-        // Base64 de vuelta a BufferedImage
+if (urlTexto == null) {
+    urlTexto = element.getChildText("url");
+}
+
+this.URL = urlTexto;
+
+        
         String imagenBase64 = element.getChildText("imagen");
         if (imagenBase64 != null && !imagenBase64.isEmpty()) {
             byte[] bytes = Base64.getDecoder().decode(imagenBase64);
