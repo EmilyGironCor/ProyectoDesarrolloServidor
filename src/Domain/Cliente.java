@@ -37,4 +37,10 @@ public abstract class Cliente extends Thread {
         return this.recibir.readLine();
     }//leerdatos
 
+    public Socket getSocket() {
+        return this.socket;
+    }
+
+    
+    
 }

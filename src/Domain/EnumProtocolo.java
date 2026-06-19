@@ -151,10 +151,10 @@ public enum EnumProtocolo {
             TareaBusiness tb = new TareaBusiness();
             int idGenerado = tb.insertar(tarea);
 
-            System.out.println("✅ Tarea insertada con ID: " + idGenerado);
+            System.out.println(" Tarea insertada con ID: " + idGenerado);
             System.out.println("   URLs: " + (tarea.getUrls() != null ? tarea.getUrls().size() : 0));
 
-            // ❌ SE ELIMINÓ EL BLOQUE QUE ENVIABA AUTOMÁTICAMENTE AL WORKER
+            // SE ELIMINÓ EL BLOQUE QUE ENVIABA AUTOMÁTICAMENTE AL WORKER
             // La tarea queda en estado "pendiente" y solo se analiza cuando
             // el usuario lo solicite explícitamente desde JIFVentanaListarTarea
 
@@ -692,19 +692,72 @@ LISTARPRODUCTOS {
             tarea.setAnalizarProductos(analizarProductos);
             tarea.setAnalizarServicios(analizarServicios);
 
-            MiClienteTrabajador worker = MiServidor.getTrabajador();
-            if (worker == null) {
-                enviarErrorAlCliente(mCliente, "ANALIZAR_TAREA_CON_OPCIONES", 
-                    "No hay worker disponible");
-                return;
-            }
+            
+            
+            List<MiClienteTrabajador> workers = MiServidor.getTrabajadores();
+if (workers.isEmpty()) {
+    enviarErrorAlCliente(mCliente, "ANALIZAR_TAREA_CON_OPCIONES",
+        "No hay workers disponibles");
+    return;
+}
 
-            DataProtocolo dpTrabajador = new DataProtocolo(
-                "ANALIZAR_URL_COMPLETO", tarea.toXMLElement()
-            );
-            worker.enviarDatos(GestionXML.xmlToString(dpTrabajador.geteAccion()));
+ArrayList<String> urls = tarea.getUrls();
+if (urls == null || urls.isEmpty()) {
+    enviarErrorAlCliente(mCliente, "ANALIZAR_TAREA_CON_OPCIONES",
+        "La tarea no tiene URLs");
+    return;
+}
 
-            System.out.println("Tarea " + idTarea + " enviada al worker con opciones seleccionadas");
+int totalWorkers = workers.size();
+int totalUrls    = urls.size();
+System.out.println("Distribuyendo " + totalUrls + " URL(s) entre " + totalWorkers + " worker(s)");
+
+// Reparto round-robin: worker 0 recibe índices 0, totalWorkers, 2*totalWorkers...
+//                      worker 1 recibe índices 1, totalWorkers+1... etc.
+for (int i = 0; i < totalWorkers; i++) {
+    ArrayList<String> urlsDeEsteWorker = new ArrayList<>();
+    for (int j = i; j < totalUrls; j += totalWorkers) {
+        urlsDeEsteWorker.add(urls.get(j));
+    }
+    if (urlsDeEsteWorker.isEmpty()) continue;
+
+    Tarea subTarea = new Tarea(
+        tarea.getIdTarea(),
+        tarea.getNombreTarea(),
+        urlsDeEsteWorker,
+        tarea.getEstado(),
+        tarea.getidUsuarioEncargado(),
+        tarea.getPrioridad(),
+        tarea.getDescripcion(),
+        analizarImagenes, analizarVideos,
+        analizarLinks, analizarProductos, analizarServicios
+    );
+
+    DataProtocolo dpTrabajador = new DataProtocolo(
+        "ANALIZAR_URL_COMPLETO", subTarea.toXMLElement()
+    );
+    workers.get(i).enviarDatos(GestionXML.xmlToString(dpTrabajador.geteAccion()));
+    System.out.println("  Worker " + (i + 1) + " recibió " + urlsDeEsteWorker.size() + " URL(s): " + urlsDeEsteWorker);
+}
+
+System.out.println("Tarea " + idTarea + " distribuida entre " + totalWorkers + " worker(s)");
+            
+            
+            
+            
+//            MiClienteTrabajador worker = MiServidor.getTrabajador();
+//            if (worker == null) {
+//                enviarErrorAlCliente(mCliente, "ANALIZAR_TAREA_CON_OPCIONES", 
+//                    "No hay worker disponible");
+//                return;
+//            }
+//
+//            DataProtocolo dpTrabajador = new DataProtocolo(
+//                "ANALIZAR_URL_COMPLETO", tarea.toXMLElement()
+//            );
+//            worker.enviarDatos(GestionXML.xmlToString(dpTrabajador.geteAccion()));
+//
+//            System.out.println("Tarea " + idTarea + " enviada al worker con opciones seleccionadas");
 
         } catch (Exception ex) {
             Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
