@@ -14,14 +14,13 @@ public class Resultado implements XMLConvertible {
     private int totalEnlaces;
     private int totalProductos;
     private int totalVideos;
+    private int totalServicios;
 
     // Constructor vacío
     public Resultado() {
     }
 
-    // Constructor completo
-    public Resultado(int idResultado, int idTarea, String fecha, int totalImagenes, 
-                     int totalEnlaces, int totalProductos, int totalVideos) {
+    public Resultado(int idResultado, int idTarea, String fecha, int totalImagenes, int totalEnlaces, int totalProductos, int totalVideos, int totalServicios) {
         this.idResultado = idResultado;
         this.idTarea = idTarea;
         this.fecha = fecha;
@@ -29,7 +28,10 @@ public class Resultado implements XMLConvertible {
         this.totalEnlaces = totalEnlaces;
         this.totalProductos = totalProductos;
         this.totalVideos = totalVideos;
+        this.totalServicios = totalServicios;
     }
+
+  
 
     // Getters y Setters
     public int getIdResultado() {
@@ -38,6 +40,14 @@ public class Resultado implements XMLConvertible {
 
     public void setIdResultado(int idResultado) {
         this.idResultado = idResultado;
+    }
+
+    public int getTotalServicios() {
+        return totalServicios;
+    }
+
+    public void setTotalServicios(int totalServicios) {
+        this.totalServicios = totalServicios;
     }
 
     public int getIdTarea() {

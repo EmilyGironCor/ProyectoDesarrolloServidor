@@ -41,4 +41,11 @@ public class TareaBusiness {
     public void eliminar(int idTarea) throws SQLException {
         this.tareaData.eliminar(idTarea);
     }
+    public void actualizarEstado(int idTarea, String nuevoEstado) throws SQLException {
+    Tarea tarea = this.tareaData.obtenerPorId(idTarea);
+    if (tarea != null) {
+        tarea.setEstado(nuevoEstado);
+        this.tareaData.actualizar(tarea);
+    }
+}
 }
