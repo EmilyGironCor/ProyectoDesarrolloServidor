@@ -10,8 +10,10 @@ import org.jdom.Element;
  *
  * @author emily
  */
-public class Servicio implements XMLConvertible{
+public class Servicio implements XMLConvertible {
+
     private int idServicio;
+    private int idTarea;
     private String nombre;
     private String descripcion;
     private double precio;
@@ -25,7 +27,24 @@ public class Servicio implements XMLConvertible{
         this.URL = URL;
     }
 
+    public Servicio(int idServicio, int idTarea, String nombre, String descripcion, double precio, String URL) {
+        this.idServicio = idServicio;
+        this.idTarea = idTarea;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.URL = URL;
+    }
+
     public Servicio() {
+    }
+
+    public int getIdTarea() {
+        return idTarea;
+    }
+
+    public void setIdTarea(int idTarea) {
+        this.idTarea = idTarea;
     }
 
     public int getIdServicio() {
@@ -70,35 +89,45 @@ public class Servicio implements XMLConvertible{
 
     @Override
     public String toString() {
-        return "Servicio{" + "idServicio=" + idServicio + ", nombre=" + nombre + ", descripcion=" + descripcion + ", precio=" + precio + ", URL=" + URL + '}';
-    }
-
-    @Override
-    public void toObject(Element element) {
-this.idServicio = Integer.parseInt(element.getChildText("idServicio"));
-        this.nombre = element.getChildText("nombre");
-        this.descripcion = element.getChildText("descripcion");
-
-        String precioTexto = element.getChildText("precio");
-        this.precio = (precioTexto != null && !precioTexto.isEmpty())
-                ? Double.parseDouble(precioTexto) : 0.0;
-
-        String urlTexto = element.getChildText("URL");
-        if (urlTexto == null) {
-            urlTexto = element.getChildText("url");
-        }
-        this.URL = urlTexto;   
+        return "Servicio{idServicio=" + idServicio + ", idTarea=" + idTarea + ", nombre=" + nombre
+                + ", precio=" + precio + ", URL=" + URL + '}';
     }
 
     @Override
     public Element toXMLElement() {
-         Element eServicio = new Element("servicio");
-        eServicio.addContent(new Element("idServicio").setText(String.valueOf(this.idServicio)));
-        eServicio.addContent(new Element("nombre").setText(this.nombre != null ? this.nombre : ""));
-        eServicio.addContent(new Element("descripcion").setText(this.descripcion != null ? this.descripcion : ""));
-        eServicio.addContent(new Element("precio").setText(String.valueOf(this.precio)));
-        eServicio.addContent(new Element("URL").setText(this.URL != null ? this.URL : ""));
+        Element eServicio = new Element("servicio");
+        eServicio.addContent(new Element("idServicio").setText(String.valueOf(idServicio)));
+        eServicio.addContent(new Element("idTarea").setText(String.valueOf(idTarea)));  // ← NUEVO
+        eServicio.addContent(new Element("nombre").setText(nombre != null ? nombre : ""));
+        eServicio.addContent(new Element("descripcion").setText(descripcion != null ? descripcion : ""));
+        eServicio.addContent(new Element("precio").setText(String.valueOf(precio)));
+        eServicio.addContent(new Element("URL").setText(URL != null ? URL : ""));
         return eServicio;
     }
-    
-}//sin clase
+
+    @Override
+    public void toObject(Element element) {
+        String idStr = element.getChildText("idServicio");
+        if (idStr != null) {
+            this.idServicio = Integer.parseInt(idStr);
+        }
+
+        String idTareaStr = element.getChildText("idTarea"); 
+        if (idTareaStr != null) {
+            this.idTarea = Integer.parseInt(idTareaStr);
+        }
+
+        this.nombre = element.getChildText("nombre");
+        this.descripcion = element.getChildText("descripcion");
+
+        String precioStr = element.getChildText("precio");
+        if (precioStr != null) {
+            this.precio = Double.parseDouble(precioStr);
+        }
+
+        this.URL = element.getChildText("URL");
+        if (this.URL == null) {
+            this.URL = element.getChildText("url");
+        }
+    }
+}//fin clase

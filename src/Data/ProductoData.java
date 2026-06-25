@@ -36,16 +36,16 @@ public class ProductoData {
      */
     public ProductoData() {
         this.cdb = ConexionDeBaseDeDatosSingleton.getInstancia();
+        try {
+            inicializarBD();
+        } catch (SQLException e) {
+            System.err.println("Error al inicializar tabla producto: " + e.getMessage());
+        }
     }
 
     /**
-     * Inicializa la tabla 'producto' en la base de datos si ésta no existe. La
-     * tabla contiene los campos: - idProducto: identificador único
-     * autoincremental del producto - precio: valor numérico (con decimales) del
-     * producto - descripcion: texto descriptivo del producto - imagen: BLOB
-     * (Binary Large Object) que almacena la imagen del producto en formato
-     * binario - URL: dirección web asociada al producto (posiblemente para más
-     * información o imagen externa)
+     * Inicializa la tabla 'producto' en la base de datos si ésta no existe.
+     * Ahora incluye la columna idTarea para asociar productos a una tarea.
      *
      * @throws SQLException Si ocurre un error durante la ejecución de la
      * sentencia SQL
@@ -53,13 +53,40 @@ public class ProductoData {
     public void inicializarBD() throws SQLException {
         String sql = "CREATE TABLE IF NOT EXISTS producto ("
                 + "idProducto INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "idTarea INTEGER NOT NULL,"
                 + "precio REAL NOT NULL,"
                 + "descripcion TEXT NOT NULL,"
                 + "imagen BLOB,"
-                + "URL TEXT NOT NULL"
+                + "URL TEXT NOT NULL,"
+                + "FOREIGN KEY (idTarea) REFERENCES tarea(idTarea)"
                 + ")";
-        try (Connection conn = this.cdb.conectar(); Statement stmt = conn.createStatement();) {
+        try (Connection conn = this.cdb.conectar(); Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
+            System.out.println("✅ Tabla 'producto' creada/verificada correctamente");
+            
+            // ✅ Ejecutar migraciones automáticamente
+            migrarColumnas(stmt);
+            
+        } catch (SQLException e) {
+            System.err.println("Error al crear tabla producto: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * ✅ MÉTODO DE MIGRACIÓN: Agrega columnas faltantes si la tabla ya existe
+     */
+    private void migrarColumnas(Statement stmt) {
+        // 1. Agregar columna idTarea si no existe
+        try {
+            stmt.execute("ALTER TABLE producto ADD COLUMN idTarea INTEGER DEFAULT 0");
+            System.out.println("✅ Columna 'idTarea' agregada a tabla producto");
+        } catch (SQLException e) {
+            if (!e.getMessage().contains("duplicate column name")) {
+                System.out.println("ℹ️ Columna 'idTarea' ya existe o error: " + e.getMessage());
+            } else {
+                System.out.println("ℹ️ Columna 'idTarea' ya existe");
+            }
         }
     }
 
@@ -76,26 +103,26 @@ public class ProductoData {
      * (escritura/conversión)
      */
     public void insertar(Producto producto) throws SQLException, IOException {
-        String sql = "INSERT INTO producto(precio, descripcion, imagen, URL) VALUES(?,?,?,?)";
+        String sql = "INSERT INTO producto(idTarea, precio, descripcion, imagen, URL) VALUES(?,?,?,?,?)";
         try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setDouble(1, producto.getPrecio());
-            pstmt.setString(2, producto.getDescripcion());
+            pstmt.setInt(1, producto.getIdTarea());
+            pstmt.setDouble(2, producto.getPrecio());
+            pstmt.setString(3, producto.getDescripcion());
 
             // Convertir la imagen a bytes si existe
             if (producto.getImagen() != null) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ImageIO.write(producto.getImagen(), "png", baos);
-                pstmt.setBytes(3, baos.toByteArray());
+                pstmt.setBytes(4, baos.toByteArray());
             } else {
-                pstmt.setBytes(3, null);
+                pstmt.setBytes(4, null);
             }
 
-            pstmt.setString(4, producto.getURL());
+            pstmt.setString(5, producto.getURL());
             pstmt.execute();
+            System.out.println("✅ Producto guardado: " + producto.getDescripcion() + " (Tarea ID: " + producto.getIdTarea() + ")");
 
         } catch (SQLException e) {
-            // Relanzar con un mensaje más amigable
             throw new SQLException("Error al guardar la información: " + e.getMessage());
         }
     }
@@ -121,17 +148,18 @@ public class ProductoData {
                 if (rs.next()) {
                     BufferedImage imagen = null;
                     byte[] imagenBytes = rs.getBytes("imagen");
-                    // Convertir los bytes de vuelta a imagen si existen
                     if (imagenBytes != null) {
                         imagen = ImageIO.read(new ByteArrayInputStream(imagenBytes));
                     }
-                    return new Producto(
+                    Producto producto = new Producto(
                             rs.getInt("idProducto"),
                             rs.getDouble("precio"),
                             rs.getString("descripcion"),
                             imagen,
                             rs.getString("URL")
                     );
+                    producto.setIdTarea(rs.getInt("idTarea"));
+                    return producto;
                 }
             }
         }
@@ -160,13 +188,50 @@ public class ProductoData {
                 if (imagenBytes != null) {
                     imagen = ImageIO.read(new ByteArrayInputStream(imagenBytes));
                 }
-                productos.add(new Producto(
+                Producto producto = new Producto(
                         rs.getInt("idProducto"),
                         rs.getDouble("precio"),
                         rs.getString("descripcion"),
                         imagen,
                         rs.getString("URL")
-                ));
+                );
+                producto.setIdTarea(rs.getInt("idTarea"));
+                productos.add(producto);
+            }
+        }
+        return productos;
+    }
+
+    /**
+     * Obtiene todos los productos asociados a una tarea específica.
+     *
+     * @param idTarea Identificador de la tarea
+     * @return ArrayList de productos de esa tarea
+     * @throws SQLException Si ocurre un error en la consulta
+     * @throws IOException Si ocurre un error al procesar alguna imagen
+     */
+    public ArrayList<Producto> obtenerPorTarea(int idTarea) throws SQLException, IOException {
+        ArrayList<Producto> productos = new ArrayList<>();
+        String sql = "SELECT * FROM producto WHERE idTarea = ?";
+        try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, idTarea);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    BufferedImage imagen = null;
+                    byte[] imagenBytes = rs.getBytes("imagen");
+                    if (imagenBytes != null) {
+                        imagen = ImageIO.read(new ByteArrayInputStream(imagenBytes));
+                    }
+                    Producto producto = new Producto(
+                            rs.getInt("idProducto"),
+                            rs.getDouble("precio"),
+                            rs.getString("descripcion"),
+                            imagen,
+                            rs.getString("URL")
+                    );
+                    producto.setIdTarea(rs.getInt("idTarea"));
+                    productos.add(producto);
+                }
             }
         }
         return productos;
@@ -188,23 +253,25 @@ public class ProductoData {
      * (escritura/conversión)
      */
     public void actualizar(Producto producto) throws SQLException, IOException {
-        String sql = "UPDATE producto SET precio = ?, descripcion = ?, imagen = ?, URL = ? WHERE idProducto = ?";
+        String sql = "UPDATE producto SET idTarea = ?, precio = ?, descripcion = ?, imagen = ?, URL = ? WHERE idProducto = ?";
         try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setDouble(1, producto.getPrecio());
-            pstmt.setString(2, producto.getDescripcion());
+            pstmt.setInt(1, producto.getIdTarea());
+            pstmt.setDouble(2, producto.getPrecio());
+            pstmt.setString(3, producto.getDescripcion());
 
             // Convertir la nueva imagen a bytes si existe
             if (producto.getImagen() != null) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ImageIO.write(producto.getImagen(), "png", baos);
-                pstmt.setBytes(3, baos.toByteArray());
+                pstmt.setBytes(4, baos.toByteArray());
             } else {
-                pstmt.setBytes(3, null);
+                pstmt.setBytes(4, null);
             }
 
-            pstmt.setString(4, producto.getURL());
-            pstmt.setInt(5, producto.getIdProducto());
+            pstmt.setString(5, producto.getURL());
+            pstmt.setInt(6, producto.getIdProducto());
             pstmt.execute();
+            System.out.println("✅ Producto actualizado: ID " + producto.getIdProducto());
         }
     }
 
@@ -217,10 +284,26 @@ public class ProductoData {
      * sentencia SQL
      */
     public void eliminar(int idProducto) throws SQLException {
-        String sql = "DELETE FROM producto ";
+        String sql = "DELETE FROM producto WHERE idProducto = ?";
         try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-          //  pstmt.setInt(1, idProducto);
+            pstmt.setInt(1, idProducto);
             pstmt.execute();
+            System.out.println("✅ Producto eliminado: ID " + idProducto);
         }
     }
-}//fin clase
+
+    /**
+     * Elimina todos los productos asociados a una tarea.
+     *
+     * @param idTarea Identificador de la tarea
+     * @throws SQLException Si ocurre un error en la consulta
+     */
+    public void eliminarPorTarea(int idTarea) throws SQLException {
+        String sql = "DELETE FROM producto WHERE idTarea = ?";
+        try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, idTarea);
+            pstmt.execute();
+            System.out.println("✅ Productos eliminados para tarea: " + idTarea);
+        }
+    }
+}
