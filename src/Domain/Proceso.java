@@ -3,11 +3,15 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package Domain;
+
 /**
+ * Representa un proceso de análisis con su estado, cantidad de hilos utilizados
+ * y el resultado obtenido.
  *
  * @author saray
  */
 public class Proceso {
+
     private int idProceso;
     private int idUsario;
     private int cantidadDeHilos;
@@ -21,19 +25,18 @@ public class Proceso {
         this.estado = estado;
         this.resultado = resultado;
     }
-    
-    public void run(){
-        
+
+    public void run() {
+
     }
-    
-    public void incializarAnalisis(){
-        
+
+    public void incializarAnalisis() {
+
     }
-    
-    public void detener(){
-        
+
+    public void detener() {
+
     }
-    
 
     public int getIdProceso() {
         return idProceso;
@@ -70,6 +73,5 @@ public class Proceso {
     public void setResultado(Resultado resultado) {
         this.resultado = resultado;
     }
-    
-    
+
 }

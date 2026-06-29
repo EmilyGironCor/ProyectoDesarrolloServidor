@@ -11,13 +11,15 @@ import java.io.PrintStream;
 import java.net.Socket;
 
 /**
+ * Clase base que administra la comunicación mediante sockets, proporcionando
+ * los métodos para enviar y recibir datos.
  *
  * @author emily
  */
 public abstract class Cliente extends Thread {
 
     protected Socket socket;//esta clase se compone de un socket, porque a fuerza lo tiene que componer 
-    protected  PrintStream enviar;
+    protected PrintStream enviar;
     protected BufferedReader recibir;
 
     public Cliente(Socket socket) throws IOException {
@@ -41,6 +43,4 @@ public abstract class Cliente extends Thread {
         return this.socket;
     }
 
-    
-    
 }

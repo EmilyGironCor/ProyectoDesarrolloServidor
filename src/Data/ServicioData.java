@@ -59,7 +59,7 @@ public class ServicioData {
         // 1. Agregar columna idTarea si no existe
         try {
             stmt.execute("ALTER TABLE servicio ADD COLUMN idTarea INTEGER DEFAULT 0");
-            System.out.println("✅ Columna 'idTarea' agregada a tabla servicio");
+            System.out.println(" Columna 'idTarea' agregada a tabla servicio");
         } catch (SQLException e) {
             if (!e.getMessage().contains("duplicate column name")) {
                 System.out.println("ℹ️ Columna 'idTarea' ya existe o error: " + e.getMessage());
@@ -71,7 +71,7 @@ public class ServicioData {
         // 2. Agregar columna descripcion si no existe
         try {
             stmt.execute("ALTER TABLE servicio ADD COLUMN descripcion TEXT");
-            System.out.println("✅ Columna 'descripcion' agregada a tabla servicio");
+            System.out.println(" Columna 'descripcion' agregada a tabla servicio");
         } catch (SQLException e) {
             if (!e.getMessage().contains("duplicate column name")) {
                 System.out.println("ℹ️ Columna 'descripcion' ya existe o error: " + e.getMessage());
@@ -83,7 +83,7 @@ public class ServicioData {
         // 3. Agregar columna precio si no existe
         try {
             stmt.execute("ALTER TABLE servicio ADD COLUMN precio REAL DEFAULT 0.0");
-            System.out.println("✅ Columna 'precio' agregada a tabla servicio");
+            System.out.println(" Columna 'precio' agregada a tabla servicio");
         } catch (SQLException e) {
             if (!e.getMessage().contains("duplicate column name")) {
                 System.out.println("ℹ️ Columna 'precio' ya existe o error: " + e.getMessage());
@@ -95,7 +95,7 @@ public class ServicioData {
         // 4. Agregar columna URL si no existe
         try {
             stmt.execute("ALTER TABLE servicio ADD COLUMN URL TEXT");
-            System.out.println("✅ Columna 'URL' agregada a tabla servicio");
+            System.out.println(" Columna 'URL' agregada a tabla servicio");
         } catch (SQLException e) {
             if (!e.getMessage().contains("duplicate column name")) {
                 System.out.println("ℹ️ Columna 'URL' ya existe o error: " + e.getMessage());

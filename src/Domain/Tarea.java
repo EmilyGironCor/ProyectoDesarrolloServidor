@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import org.jdom.Element;
 
 /**
+ * Representa una tarea de análisis con sus URLs, opciones de procesamiento y
+ * métodos de conversión entre Java y XML.
  *
  * @author saray
  */
@@ -15,14 +17,13 @@ public class Tarea implements XMLConvertible {
 
     private int idTarea;
     private String nombreTarea;
-    private String URL;  // Mantenemos para compatibilidad (será la primera URL)
+    private String URL;
     private String estado;
     private int idUsuarioEncargado;
     private int prioridad;
     private String descripcion;
-    
-    // NUEVOS CAMPOS
-    private ArrayList<String> urls;  // Lista de múltiples URLs
+
+    private ArrayList<String> urls;
     private boolean analizarImagenes;
     private boolean analizarVideos;
     private boolean analizarLinks;
@@ -52,8 +53,8 @@ public class Tarea implements XMLConvertible {
         this.analizarServicios = false;
     }
 
-    public Tarea(int idTarea, String nombreTarea, String URL, String estado, 
-                 int idUsuarioEncargado, int prioridad, String descripcion) {
+    public Tarea(int idTarea, String nombreTarea, String URL, String estado,
+            int idUsuarioEncargado, int prioridad, String descripcion) {
         this.idTarea = idTarea;
         this.nombreTarea = nombreTarea;
         this.URL = URL;
@@ -71,12 +72,12 @@ public class Tarea implements XMLConvertible {
         this.analizarProductos = false;
         this.analizarServicios = false;
     }
-    
+
     // Constructor completo con todas las opciones
     public Tarea(int idTarea, String nombreTarea, ArrayList<String> urls, String estado,
-                 int idUsuarioEncargado, int prioridad, String descripcion,
-                 boolean analizarImagenes, boolean analizarVideos, 
-                 boolean analizarLinks, boolean analizarProductos, boolean analizarServicios) {
+            int idUsuarioEncargado, int prioridad, String descripcion,
+            boolean analizarImagenes, boolean analizarVideos,
+            boolean analizarLinks, boolean analizarProductos, boolean analizarServicios) {
         this.idTarea = idTarea;
         this.nombreTarea = nombreTarea;
         this.urls = urls != null ? urls : new ArrayList<>();
@@ -89,7 +90,7 @@ public class Tarea implements XMLConvertible {
         this.analizarLinks = analizarLinks;
         this.analizarProductos = analizarProductos;
         this.analizarServicios = analizarServicios;
-        
+
         // Mantener URL por compatibilidad (primera URL)
         if (!this.urls.isEmpty()) {
             this.URL = this.urls.get(0);
@@ -167,19 +168,19 @@ public class Tarea implements XMLConvertible {
     public void setidUsuarioEncargado(int dUsuarioEncargado) {
         this.idUsuarioEncargado = dUsuarioEncargado;
     }
-    
+
     // NUEVOS GETTERS Y SETTERS
     public ArrayList<String> getUrls() {
         return urls;
     }
-    
+
     public void setUrls(ArrayList<String> urls) {
         this.urls = urls;
         if (urls != null && !urls.isEmpty()) {
             this.URL = urls.get(0);
         }
     }
-    
+
     public void addUrl(String url) {
         if (this.urls == null) {
             this.urls = new ArrayList<>();
@@ -189,52 +190,52 @@ public class Tarea implements XMLConvertible {
             this.URL = url;
         }
     }
-    
+
     public boolean isAnalizarImagenes() {
         return analizarImagenes;
     }
-    
+
     public void setAnalizarImagenes(boolean analizarImagenes) {
         this.analizarImagenes = analizarImagenes;
     }
-    
+
     public boolean isAnalizarVideos() {
         return analizarVideos;
     }
-    
+
     public void setAnalizarVideos(boolean analizarVideos) {
         this.analizarVideos = analizarVideos;
     }
-    
+
     public boolean isAnalizarLinks() {
         return analizarLinks;
     }
-    
+
     public void setAnalizarLinks(boolean analizarLinks) {
         this.analizarLinks = analizarLinks;
     }
-    
+
     public boolean isAnalizarProductos() {
         return analizarProductos;
     }
-    
+
     public void setAnalizarProductos(boolean analizarProductos) {
         this.analizarProductos = analizarProductos;
     }
-    
+
     public boolean isAnalizarServicios() {
         return analizarServicios;
     }
-    
+
     public void setAnalizarServicios(boolean analizarServicios) {
         this.analizarServicios = analizarServicios;
     }
 
     @Override
     public String toString() {
-        return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea 
-                + ", urls=" + (urls != null ? urls.size() : 0) 
-                + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioEncargado 
+        return "Tarea{" + "idTarea=" + idTarea + ", nombreTarea=" + nombreTarea
+                + ", urls=" + (urls != null ? urls.size() : 0)
+                + ", estado=" + estado + ", idUsuarioCreador=" + idUsuarioEncargado
                 + ", prioridad=" + prioridad + '}';
     }
 
@@ -269,7 +270,7 @@ public class Tarea implements XMLConvertible {
             this.URL = root.getChildText("URL");
         }
 
-        // LEER LISTA DE URLs - CORREGIDO (usa Object para evitar problemas con List)
+        // LEER LISTA DE URLs 
         Element eUrls = root.getChild("urls");
         if (eUrls != null) {
             this.urls = new ArrayList<>();
@@ -317,24 +318,34 @@ public class Tarea implements XMLConvertible {
         if (root.getChildText("descripcion") != null) {
             this.descripcion = root.getChildText("descripcion");
         }
-        
+
         // LEER OPCIONES DE ANÁLISIS
         Element eOpciones = root.getChild("opcionesAnalisis");
         if (eOpciones != null) {
             String img = eOpciones.getChildText("analizarImagenes");
-            if (img != null) this.analizarImagenes = Boolean.parseBoolean(img);
-            
+            if (img != null) {
+                this.analizarImagenes = Boolean.parseBoolean(img);
+            }
+
             String vid = eOpciones.getChildText("analizarVideos");
-            if (vid != null) this.analizarVideos = Boolean.parseBoolean(vid);
-            
+            if (vid != null) {
+                this.analizarVideos = Boolean.parseBoolean(vid);
+            }
+
             String link = eOpciones.getChildText("analizarLinks");
-            if (link != null) this.analizarLinks = Boolean.parseBoolean(link);
-            
+            if (link != null) {
+                this.analizarLinks = Boolean.parseBoolean(link);
+            }
+
             String prod = eOpciones.getChildText("analizarProductos");
-            if (prod != null) this.analizarProductos = Boolean.parseBoolean(prod);
-            
+            if (prod != null) {
+                this.analizarProductos = Boolean.parseBoolean(prod);
+            }
+
             String serv = eOpciones.getChildText("analizarServicios");
-            if (serv != null) this.analizarServicios = Boolean.parseBoolean(serv);
+            if (serv != null) {
+                this.analizarServicios = Boolean.parseBoolean(serv);
+            }
         }
     }
 
@@ -349,7 +360,7 @@ public class Tarea implements XMLConvertible {
         eTarea.addContent(new Element("idUsuarioCreador").setText(String.valueOf(this.idUsuarioEncargado)));
         eTarea.addContent(new Element("prioridad").setText(String.valueOf(this.prioridad)));
         eTarea.addContent(new Element("descripcion").setText(this.descripcion != null ? this.descripcion : ""));
-        
+
         // ENVIAR LISTA DE URLs
         Element eUrls = new Element("urls");
         if (this.urls != null) {
@@ -362,7 +373,7 @@ public class Tarea implements XMLConvertible {
             eUrls.addContent(new Element("url").setText(this.URL));
         }
         eTarea.addContent(eUrls);
-        
+
         // ENVIAR OPCIONES DE ANÁLISIS
         Element eOpciones = new Element("opcionesAnalisis");
         eOpciones.addContent(new Element("analizarImagenes").setText(String.valueOf(analizarImagenes)));

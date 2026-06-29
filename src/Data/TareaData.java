@@ -154,7 +154,7 @@ public class TareaData {
         try (ResultSet rs = pstmt.getGeneratedKeys()) {
             if (rs.next()) {
                 int idGenerado = rs.getInt(1);
-                System.out.println("✅ Tarea insertada con ID: " + idGenerado);
+                System.out.println("Tarea insertada con ID: " + idGenerado);
                 return idGenerado;
             }
             throw new SQLException("No se pudo obtener el ID generado");
@@ -273,28 +273,31 @@ public class TareaData {
     }
 
     public void actualizar(Tarea tarea) throws SQLException {
-        String sql = "UPDATE tarea SET nombreTarea = ?, urls = ?, estado = ?, idUsuarioCreador = ?, "
-                + "prioridad = ?, descripcion = ?, analizarImagenes = ?, analizarVideos = ?, "
-                + "analizarLinks = ?, analizarProductos = ?, analizarServicios = ? WHERE idTarea = ?";
+        String sql = "UPDATE tarea SET nombreTarea = ?, urls = ?, URL = ?, estado = ?, idUsuarioCreador = ?, "
+        + "prioridad = ?, descripcion = ?, analizarImagenes = ?, analizarVideos = ?, "
+        + "analizarLinks = ?, analizarProductos = ?, analizarServicios = ? WHERE idTarea = ?";
         try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             String urlsStr = "";
+            String primeraUrl = "";
             if (tarea.getUrls() != null && !tarea.getUrls().isEmpty()) {
                 urlsStr = String.join("|", tarea.getUrls());
+                primeraUrl = tarea.getUrls().get(0);
             }
-            
+
             pstmt.setString(1, tarea.getNombreTarea());
             pstmt.setString(2, urlsStr);
-            pstmt.setString(3, tarea.getEstado());
-            pstmt.setInt(4, tarea.getIdUsuarioCreador());
-            pstmt.setInt(5, tarea.getPrioridad());
-            pstmt.setString(6, tarea.getDescripcion() != null ? tarea.getDescripcion() : "");
-            pstmt.setInt(7, tarea.isAnalizarImagenes() ? 1 : 0);
-            pstmt.setInt(8, tarea.isAnalizarVideos() ? 1 : 0);
-            pstmt.setInt(9, tarea.isAnalizarLinks() ? 1 : 0);
-            pstmt.setInt(10, tarea.isAnalizarProductos() ? 1 : 0);
-            pstmt.setInt(11, tarea.isAnalizarServicios() ? 1 : 0);
-            pstmt.setInt(12, tarea.getIdTarea());
+            pstmt.setString(3, primeraUrl);
+            pstmt.setString(4, tarea.getEstado());
+            pstmt.setInt(5, tarea.getIdUsuarioCreador());
+            pstmt.setInt(6, tarea.getPrioridad());
+            pstmt.setString(7, tarea.getDescripcion() != null ? tarea.getDescripcion() : "");
+            pstmt.setInt(8, tarea.isAnalizarImagenes() ? 1 : 0);
+            pstmt.setInt(9, tarea.isAnalizarVideos() ? 1 : 0);
+            pstmt.setInt(10, tarea.isAnalizarLinks() ? 1 : 0);
+            pstmt.setInt(11, tarea.isAnalizarProductos() ? 1 : 0);
+            pstmt.setInt(12, tarea.isAnalizarServicios() ? 1 : 0);
+            pstmt.setInt(13, tarea.getIdTarea());
             pstmt.execute();
             System.out.println(" Tarea actualizada correctamente");
         }

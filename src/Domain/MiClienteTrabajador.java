@@ -4,13 +4,9 @@
  */
 package Domain;
 
-import Domain.DataProtocolo;
-import Domain.Resultado;
-import Domain.Tarea;
 import Utility.GestionXML;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.logging.Level;
@@ -19,6 +15,8 @@ import org.jdom.Element;
 import org.jdom.JDOMException;
 
 /**
+ * Representa un trabajador conectado al servidor encargado de procesar las
+ * solicitudes provenientes del análisis web.
  *
  * @author saray
  */
@@ -27,16 +25,13 @@ public class MiClienteTrabajador extends Cliente {
     private Socket socket;
     private BufferedReader recibir;
     private PrintStream enviar;
-    
 
     public MiClienteTrabajador(Socket socket) throws IOException {
         super(socket);
     }
 
-   public void run() {
+    public void run() {
         try {
-
-        
 
             do {
                 String xmlString = this.leerDatos();

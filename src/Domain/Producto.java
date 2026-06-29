@@ -15,13 +15,15 @@ import javax.imageio.ImageIO;
 import org.jdom.Element;
 
 /**
+ * Representa un producto encontrado durante el análisis web y permite convertir
+ * su información entre objetos Java y XML.
  *
  * @author saray
  */
 public class Producto implements XMLConvertible {
 
     private int idProducto;
-    private int idTarea;  // ← NUEVO CAMPO
+    private int idTarea;  
     private double precio;
     private String descripcion;
     private BufferedImage imagen;
@@ -38,8 +40,8 @@ public class Producto implements XMLConvertible {
         this.imagen = imagen;
         this.URL = URL;
     }
-    
-    // ✅ Constructor con idTarea
+
+    // Constructor con idTarea
     public Producto(int idProducto, int idTarea, double precio, String descripcion, BufferedImage imagen, String URL) {
         this.idProducto = idProducto;
         this.idTarea = idTarea;
@@ -57,12 +59,12 @@ public class Producto implements XMLConvertible {
     public void setIdProducto(int idProducto) {
         this.idProducto = idProducto;
     }
-    
-    public int getIdTarea() {  // ← NUEVO
+
+    public int getIdTarea() { 
         return idTarea;
     }
-    
-    public void setIdTarea(int idTarea) {  // ← NUEVO
+
+    public void setIdTarea(int idTarea) { 
         this.idTarea = idTarea;
     }
 
@@ -105,35 +107,35 @@ public class Producto implements XMLConvertible {
 
     @Override
     public void toObject(Element element) {
-        // ✅ Leer idProducto con manejo de null
+        //Leer idProducto con manejo de null
         String idStr = element.getChildText("idProducto");
         if (idStr != null) {
             this.idProducto = Integer.parseInt(idStr);
         }
-        
-        // ✅ Leer idTarea (NUEVO)
+
+        // Leer idTarea (NUEVO)
         String idTareaStr = element.getChildText("idTarea");
         if (idTareaStr != null) {
             this.idTarea = Integer.parseInt(idTareaStr);
         }
-        
-        // ✅ Leer precio con manejo de null
+
+        //Leer precio con manejo de null
         String precioStr = element.getChildText("precio");
         if (precioStr != null) {
             this.precio = Double.parseDouble(precioStr);
         }
-        
-        // ✅ Leer descripcion
+
+        //Leer descripcion
         this.descripcion = element.getChildText("descripcion");
-        
-        // ✅ Leer URL (compatibilidad con URL o url)
+
+        //Leer URL (compatibilidad con URL o url)
         String urlTexto = element.getChildText("URL");
         if (urlTexto == null) {
             urlTexto = element.getChildText("url");
         }
         this.URL = urlTexto;
-        
-        // ✅ Leer imagen
+
+        //Leer imagen
         String imagenBase64 = element.getChildText("imagen");
         if (imagenBase64 != null && !imagenBase64.isEmpty()) {
             byte[] bytes = Base64.getDecoder().decode(imagenBase64);
@@ -157,7 +159,7 @@ public class Producto implements XMLConvertible {
         eProducto.addContent(new Element("descripcion").setText(this.descripcion != null ? this.descripcion : ""));
         eProducto.addContent(new Element("URL").setText(this.URL != null ? this.URL : ""));
 
-        // Imagen a Base64 para viajar en XML
+        // Imagen a Base para viajar en XML
         if (this.imagen != null) {
             try {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();

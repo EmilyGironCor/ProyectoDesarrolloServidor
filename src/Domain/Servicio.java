@@ -7,6 +7,8 @@ package Domain;
 import org.jdom.Element;
 
 /**
+ * Representa un servicio encontrado durante el análisis web y permite convertir
+ * su información entre objetos Java y XML.
  *
  * @author emily
  */
@@ -112,7 +114,7 @@ public class Servicio implements XMLConvertible {
             this.idServicio = Integer.parseInt(idStr);
         }
 
-        String idTareaStr = element.getChildText("idTarea"); 
+        String idTareaStr = element.getChildText("idTarea");
         if (idTareaStr != null) {
             this.idTarea = Integer.parseInt(idTareaStr);
         }

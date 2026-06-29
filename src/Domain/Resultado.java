@@ -3,10 +3,13 @@ package Domain;
 import org.jdom.Element;
 
 /**
+ * Almacena los resultados obtenidos durante el análisis de una tarea y permite
+ * convertirlos entre objetos Java y XML.
  *
  * @author saray
  */
 public class Resultado implements XMLConvertible {
+
     private int idResultado;
     private int idTarea;
     private String fecha;
@@ -30,8 +33,6 @@ public class Resultado implements XMLConvertible {
         this.totalVideos = totalVideos;
         this.totalServicios = totalServicios;
     }
-
-  
 
     // Getters y Setters
     public int getIdResultado() {
@@ -98,20 +99,18 @@ public class Resultado implements XMLConvertible {
         this.totalVideos = totalVideos;
     }
 
-    // ==================== MÉTODOS XML ====================
-    
     @Override
     public void toObject(Element element) {
         // Buscar el nodo resultado (puede estar directamente o dentro de otro nodo)
-        Element eResultado = element.getName().equals("resultado") 
-                ? element 
+        Element eResultado = element.getName().equals("resultado")
+                ? element
                 : element.getChild("resultado");
-        
+
         if (eResultado == null) {
             System.out.println("Error: No se encontró el nodo <resultado> en el XML");
             return;
         }
-        
+
         if (eResultado.getChildText("idResultado") != null) {
             this.idResultado = Integer.parseInt(eResultado.getChildText("idResultado"));
         }
@@ -138,7 +137,7 @@ public class Resultado implements XMLConvertible {
     @Override
     public Element toXMLElement() {
         Element eResultado = new Element("resultado");
-        
+
         eResultado.addContent(new Element("idResultado").setText(String.valueOf(this.idResultado)));
         eResultado.addContent(new Element("idTarea").setText(String.valueOf(this.idTarea)));
         eResultado.addContent(new Element("fecha").setText(this.fecha != null ? this.fecha : ""));
@@ -146,18 +145,18 @@ public class Resultado implements XMLConvertible {
         eResultado.addContent(new Element("totalEnlaces").setText(String.valueOf(this.totalEnlaces)));
         eResultado.addContent(new Element("totalProductos").setText(String.valueOf(this.totalProductos)));
         eResultado.addContent(new Element("totalVideos").setText(String.valueOf(this.totalVideos)));
-        
+
         return eResultado;
     }
 
     @Override
     public String toString() {
-        return "Resultado{" + "idResultado=" + idResultado 
-                + ", idTarea=" + idTarea 
-                + ", fecha=" + fecha 
-                + ", totalImagenes=" + totalImagenes 
-                + ", totalEnlaces=" + totalEnlaces 
-                + ", totalProductos=" + totalProductos 
+        return "Resultado{" + "idResultado=" + idResultado
+                + ", idTarea=" + idTarea
+                + ", fecha=" + fecha
+                + ", totalImagenes=" + totalImagenes
+                + ", totalEnlaces=" + totalEnlaces
+                + ", totalProductos=" + totalProductos
                 + ", totalVideos=" + totalVideos + '}';
     }
 }

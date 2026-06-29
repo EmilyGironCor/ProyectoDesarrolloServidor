@@ -7,6 +7,8 @@ package Domain;
 import org.jdom.Element;
 
 /**
+ * Representa un usuario del sistema con su información personal, credenciales y
+ * datos necesarios para la autenticación.
  *
  * @author saray
  */
@@ -84,31 +86,6 @@ public class Usuario {
         return "Usuario{" + "id=" + id + ", nombre=" + nombre + ", rol=" + rol + ", contrasena=" + contrasena + ", estado=" + estado + ", correo=" + correo + '}';
     }
 
-//    public void toObject(Element element) {
-//
-//        this.id = Integer.parseInt(
-//                element.getChild("usuario")
-//                        .getChild("id")
-//                        .getValue());
-//
-//        this.nombre = element.getChild("usuario")
-//                .getChild("nombre")
-//                .getValue();
-//
-//        this.contrasena = element.getChild("usuario")
-//                .getChild("contrasena")
-//                .getValue();
-//
-//        this.correo = element.getChild("usuario")
-//                .getChild("correo")
-//                .getValue();
-//
-//        this.estado = Boolean.parseBoolean(
-//                element.getChild("usuario")
-//                        .getChild("estado")
-//                        .getValue());
-//
-//    }
     public void toObject(Element element) {
         // 1. Detectar si el elemento recibido ya es directamente <usuario> o si viene envuelto
         Element root = element.getName().equals("usuario") ? element : element.getChild("usuario");
@@ -118,7 +95,7 @@ public class Usuario {
             return;
         }
 
-        // 2. Leer idUsuario (Mapeado exactamente como lo envía el Cliente)
+        // Leer idUsuario 
         if (root.getChild("idUsuario") != null) {
             this.id = Integer.parseInt(root.getChild("idUsuario").getValue());
         } else if (root.getChild("id") != null) {
@@ -127,12 +104,12 @@ public class Usuario {
             this.id = 0;
         }
 
-        // 3. Leer nombre
+        //Leer nombre
         if (root.getChild("nombre") != null) {
             this.nombre = root.getChild("nombre").getValue().trim();
         }
 
-        // 4. Leer contraseña (Soporta <contraseina> que es la que envía tu Cliente)
+        //Leer contraseña 
         if (root.getChild("contraseina") != null) {
             this.contrasena = root.getChild("contraseina").getValue().trim();
         } else if (root.getChild("contrasena") != null) {
@@ -141,21 +118,21 @@ public class Usuario {
             this.contrasena = root.getChild("password").getValue().trim();
         }
 
-        // 5. Leer correo
+        // Leer correo
         if (root.getChild("correo") != null) {
             this.correo = root.getChild("correo").getValue().trim();
         } else {
             this.correo = "";
         }
 
-        // 6. Leer estado
+        // Leer estado
         if (root.getChild("estado") != null) {
             this.estado = Boolean.parseBoolean(root.getChild("estado").getValue());
         } else {
             this.estado = true;
         }
 
-        // 7. Leer rol
+        // Leer rol
         if (root.getChild("rol") != null) {
             this.rol = Integer.parseInt(root.getChild("rol").getValue());
         } else {
@@ -172,15 +149,15 @@ public class Usuario {
             return;
         }
 
-        // Buscamos el nodo credenciales: si el elemento actual ya es <credenciales>, lo usamos; 
-        // de lo contrario, lo buscamos entre sus hijos.
+        // Busca el nodo credenciales, si el elemento actual ya es <credenciales>, se usa, 
+        // de lo contrario, busca entre sus hijos.
         Element eCredenciales = eDatos.getName().equals("credenciales") ? eDatos : eDatos.getChild("credenciales");
 
         if (eCredenciales != null) {
             this.nombre = eCredenciales.getChildText("usuario") != null ? eCredenciales.getChildText("usuario").trim() : "";
             this.contrasena = eCredenciales.getChildText("contrasena") != null ? eCredenciales.getChildText("contrasena").trim() : "";
         } else {
-            // Plan de respaldo: Si el protocolo cambió y enviaron los datos sueltos dentro de <datos> sin el nodo <credenciales>
+
             if (eDatos.getChild("usuario") != null) {
                 this.nombre = eDatos.getChildText("usuario").trim();
             }

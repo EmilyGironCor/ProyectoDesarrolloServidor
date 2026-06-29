@@ -179,14 +179,34 @@ public void inicializarBD() throws SQLException {
      * sentencia SQL
      */
     public void actualizar(Usuario usuario) throws SQLException {
-        String sql = "UPDATE usuario SET nombre = ?, contrasena = ?, estado = ?, correo = ?, idRol = ? WHERE idUsuario = ?";
+        boolean cambiarContrasena = usuario.getContrasena() != null
+                && !usuario.getContrasena().trim().isEmpty();
+
+        String sql;
+
+        if (cambiarContrasena) {
+            sql = "UPDATE usuario SET nombre = ?, contrasena = ?, estado = ?, correo = ?, idRol = ? WHERE idUsuario = ?";
+        } else {
+            sql = "UPDATE usuario SET nombre = ?, estado = ?, correo = ?, idRol = ? WHERE idUsuario = ?";
+        }
+
         try (Connection conn = this.cdb.conectar(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, usuario.getNombre());
-            pstmt.setString(2, usuario.getContrasena());
-            pstmt.setInt(3, usuario.isEstado() ? 1 : 0);
-            pstmt.setString(4, usuario.getCorreo());
-            pstmt.setInt(5, usuario.getRol());
-            pstmt.setInt(6, usuario.getId());
+
+            if (cambiarContrasena) {
+                pstmt.setString(1, usuario.getNombre());
+                pstmt.setString(2, usuario.getContrasena());
+                pstmt.setInt(3, usuario.isEstado() ? 1 : 0);
+                pstmt.setString(4, usuario.getCorreo());
+                pstmt.setInt(5, usuario.getRol());
+                pstmt.setInt(6, usuario.getId());
+            } else {
+                pstmt.setString(1, usuario.getNombre());
+                pstmt.setInt(2, usuario.isEstado() ? 1 : 0);
+                pstmt.setString(3, usuario.getCorreo());
+                pstmt.setInt(4, usuario.getRol());
+                pstmt.setInt(5, usuario.getId());
+            }
+
             pstmt.execute();
         }
     }

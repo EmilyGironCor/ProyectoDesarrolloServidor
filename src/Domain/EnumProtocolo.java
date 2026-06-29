@@ -15,8 +15,17 @@ import org.jdom.Element;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Define las acciones del protocolo de comunicación del servidor, procesando
+ * las solicitudes recibidas y coordinando las operaciones del sistema.
+ *
+ * @author emily
+ */
 public enum EnumProtocolo {
-
+    /**
+     * Valida las credenciales del usuario y responde con el resultado del
+     * inicio de sesión.
+     */
     LOGIN {
         @Override
         public void accion(Cliente mCliente, Element eDatos) {
@@ -163,9 +172,6 @@ public enum EnumProtocolo {
                 System.out.println(" Tarea insertada con ID: " + idGenerado);
                 System.out.println("   URLs: " + (tarea.getUrls() != null ? tarea.getUrls().size() : 0));
 
-                // SE ELIMINÓ EL BLOQUE QUE ENVIABA AUTOMÁTICAMENTE AL WORKER
-                // La tarea queda en estado "pendiente" y solo se analiza cuando
-                // el usuario lo solicite explícitamente desde JIFVentanaListarTarea
                 Element eRespuesta = new Element("respuesta");
                 eRespuesta.addContent(new Element("resultado").setText("OK"));
                 eRespuesta.addContent(new Element("mensaje").setText("Tarea registrada correctamente con "
@@ -483,58 +489,58 @@ public enum EnumProtocolo {
             }
         }
     },
-   GUARDAR_PRODUCTOS {
-    @Override
-    public void accion(Cliente mCliente, Element eDatos) {
-        try {
-            System.out.println("GUARDAR_PRODUCTOS recibido del worker");
+    GUARDAR_PRODUCTOS {
+        @Override
+        public void accion(Cliente mCliente, Element eDatos) {
+            try {
+                System.out.println("GUARDAR_PRODUCTOS recibido del worker");
 
-            Element eListaProductos = eDatos.getChild("listaProductos");
+                Element eListaProductos = eDatos.getChild("listaProductos");
 
-            if (eListaProductos == null) {
-                System.err.println("No se encontró lista de productos");
-                Element eError = new Element("error").addContent("No se encontró lista de productos");
+                if (eListaProductos == null) {
+                    System.err.println("No se encontró lista de productos");
+                    Element eError = new Element("error").addContent("No se encontró lista de productos");
+                    DataProtocolo dpError = new DataProtocolo("GUARDAR_PRODUCTOS_ERROR", eError);
+                    mCliente.enviarDatos(GestionXML.xmlToString(dpError.geteAccion()));
+                    return;
+                }
+
+                String idTarea = eListaProductos.getChildText("idTarea");
+                List<Element> eProductos = eListaProductos.getChildren("producto");
+                ProductoData productoData = new ProductoData();
+
+                for (Element eProducto : eProductos) {
+                    Producto p = new Producto();
+                    p.toObject(eProducto);
+
+                    // ✅ ASIGNAR idTarea si no viene en el XML
+                    if (p.getIdTarea() == 0 && idTarea != null) {
+                        p.setIdTarea(Integer.parseInt(idTarea));
+                    }
+
+                    productoData.insertar(p);
+                    System.out.println("Producto guardado: " + p.getDescripcion() + " (Tarea ID: " + p.getIdTarea() + ")");
+                }
+
+                System.out.println(eProductos.size() + " productos guardados para tarea " + idTarea);
+
+                Element eRespuestaWorker = new Element("respuesta");
+                eRespuestaWorker.addContent(new Element("resultado").setText("OK"));
+                eRespuestaWorker.addContent(new Element("mensaje").setText("Productos guardados correctamente"));
+
+                DataProtocolo dpWorker = new DataProtocolo("GUARDAR_PRODUCTOS_RESPUESTA", eRespuestaWorker);
+                mCliente.enviarDatos(GestionXML.xmlToString(dpWorker.geteAccion()));
+
+            } catch (SQLException ex) {
+                Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
+                Element eError = new Element("error").addContent(ex.getMessage());
                 DataProtocolo dpError = new DataProtocolo("GUARDAR_PRODUCTOS_ERROR", eError);
                 mCliente.enviarDatos(GestionXML.xmlToString(dpError.geteAccion()));
-                return;
+            } catch (IOException ex) {
+                Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-            String idTarea = eListaProductos.getChildText("idTarea");
-            List<Element> eProductos = eListaProductos.getChildren("producto");
-            ProductoData productoData = new ProductoData();
-
-            for (Element eProducto : eProductos) {
-                Producto p = new Producto();
-                p.toObject(eProducto);
-                
-                // ✅ ASIGNAR idTarea si no viene en el XML
-                if (p.getIdTarea() == 0 && idTarea != null) {
-                    p.setIdTarea(Integer.parseInt(idTarea));
-                }
-                
-                productoData.insertar(p);
-                System.out.println("✅ Producto guardado: " + p.getDescripcion() + " (Tarea ID: " + p.getIdTarea() + ")");
-            }
-
-            System.out.println(eProductos.size() + " productos guardados para tarea " + idTarea);
-
-            Element eRespuestaWorker = new Element("respuesta");
-            eRespuestaWorker.addContent(new Element("resultado").setText("OK"));
-            eRespuestaWorker.addContent(new Element("mensaje").setText("Productos guardados correctamente"));
-
-            DataProtocolo dpWorker = new DataProtocolo("GUARDAR_PRODUCTOS_RESPUESTA", eRespuestaWorker);
-            mCliente.enviarDatos(GestionXML.xmlToString(dpWorker.geteAccion()));
-
-        } catch (SQLException ex) {
-            Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
-            Element eError = new Element("error").addContent(ex.getMessage());
-            DataProtocolo dpError = new DataProtocolo("GUARDAR_PRODUCTOS_ERROR", eError);
-            mCliente.enviarDatos(GestionXML.xmlToString(dpError.geteAccion()));
-        } catch (IOException ex) {
-            Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-},
+    },
     GUARDAR_RESULTADO_URL {
         @Override
         public void accion(Cliente mCliente, Element eDatos) {
@@ -614,14 +620,13 @@ public enum EnumProtocolo {
                 System.out.println("  Videos:   " + resultado.getTotalVideos());
                 System.out.println("  Productos:" + resultado.getTotalProductos());
 
-                // ✅ NUEVO: Actualizar estado de la tarea
                 try {
                     TareaBusiness tb = new TareaBusiness();
                     Tarea tarea = tb.buscarPorId(resultado.getIdTarea());
                     if (tarea != null) {
                         tarea.setEstado("completada");
                         tb.actualizar(tarea);
-                        System.out.println("✅ Estado de tarea " + resultado.getIdTarea() + " actualizado a 'completada'");
+                        System.out.println("Estado de tarea " + resultado.getIdTarea() + " actualizado a 'completada'");
                     }
                 } catch (SQLException ex) {
                     Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
@@ -650,7 +655,7 @@ public enum EnumProtocolo {
                 enviarErrorAlCliente(mCliente, "LISTARRESULTADOS", ex.getMessage());
             }
         }
-    },// Agregar en EnumProtocolo.java del servidor
+    },
     LISTARPRODUCTOS {
         @Override
         public void accion(Cliente mCliente, Element eDatos) {
@@ -673,63 +678,63 @@ public enum EnumProtocolo {
             }
         }
     }, GUARDAR_SERVICIOS {
-    @Override
-    public void accion(Cliente mCliente, Element eDatos) {
-        try {
-            System.out.println("GUARDAR_SERVICIOS recibido del worker");
+        @Override
+        public void accion(Cliente mCliente, Element eDatos) {
+            try {
+                System.out.println("GUARDAR_SERVICIOS recibido del worker");
 
-            Element eListaServicios = eDatos.getChild("listaServicios");
+                Element eListaServicios = eDatos.getChild("listaServicios");
 
-            if (eListaServicios == null) {
-                System.err.println("No se encontró lista de servicios");
-                return;
-            }
-
-            String idTarea = eListaServicios.getChildText("idTarea");
-            List<Element> eServicios = eListaServicios.getChildren("servicio");
-
-            ServicioData servicioData = new ServicioData();
-
-            for (Element eServicio : eServicios) {
-                Servicio s = new Servicio();
-                s.toObject(eServicio);
-                
-                // ✅ ASIGNAR idTarea al servicio (si no viene en el XML)
-                if (s.getIdTarea() == 0 && idTarea != null) {
-                    s.setIdTarea(Integer.parseInt(idTarea));
+                if (eListaServicios == null) {
+                    System.err.println("No se encontró lista de servicios");
+                    return;
                 }
-                
-                servicioData.insertar(s);
-                System.out.println("✅ Servicio guardado: " + s.getNombre() + " (Tarea ID: " + s.getIdTarea() + ")");
+
+                String idTarea = eListaServicios.getChildText("idTarea");
+                List<Element> eServicios = eListaServicios.getChildren("servicio");
+
+                ServicioData servicioData = new ServicioData();
+
+                for (Element eServicio : eServicios) {
+                    Servicio s = new Servicio();
+                    s.toObject(eServicio);
+
+                    if (s.getIdTarea() == 0 && idTarea != null) {
+                        s.setIdTarea(Integer.parseInt(idTarea));
+                    }
+
+                    servicioData.insertar(s);
+                    System.out.println("Servicio guardado: " + s.getNombre() + " (Tarea ID: " + s.getIdTarea() + ")");
+                }
+
+                System.out.println(eServicios.size() + " servicios guardados para tarea " + idTarea);
+
+                Element eRespuesta = new Element("respuesta");
+                eRespuesta.addContent(new Element("resultado").setText("OK"));
+                eRespuesta.addContent(new Element("mensaje").setText("Servicios guardados correctamente"));
+
+                DataProtocolo dp = new DataProtocolo("GUARDAR_SERVICIOS_RESPUESTA", eRespuesta);
+                mCliente.enviarDatos(GestionXML.xmlToString(dp.geteAccion()));
+
+            } catch (SQLException ex) {
+                Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
+                // Enviar error al worker
+                Element eError = new Element("error").addContent(ex.getMessage());
+                DataProtocolo dpError = new DataProtocolo("GUARDAR_SERVICIOS_ERROR", eError);
+                mCliente.enviarDatos(GestionXML.xmlToString(dpError.geteAccion()));
+            } catch (NumberFormatException ex) {
+                Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, "Error parseando idTarea", ex);
             }
-
-            System.out.println(eServicios.size() + " servicios guardados para tarea " + idTarea);
-
-            Element eRespuesta = new Element("respuesta");
-            eRespuesta.addContent(new Element("resultado").setText("OK"));
-            eRespuesta.addContent(new Element("mensaje").setText("Servicios guardados correctamente"));
-
-            DataProtocolo dp = new DataProtocolo("GUARDAR_SERVICIOS_RESPUESTA", eRespuesta);
-            mCliente.enviarDatos(GestionXML.xmlToString(dp.geteAccion()));
-
-        } catch (SQLException ex) {
-            Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
-            // Enviar error al worker
-            Element eError = new Element("error").addContent(ex.getMessage());
-            DataProtocolo dpError = new DataProtocolo("GUARDAR_SERVICIOS_ERROR", eError);
-            mCliente.enviarDatos(GestionXML.xmlToString(dpError.geteAccion()));
-        } catch (NumberFormatException ex) {
-            Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, "Error parseando idTarea", ex);
         }
-    }
-},GUARDAR_SERVICIOS_ERROR {
-    @Override
-    public void accion(Cliente mCliente, Element eDatos) {
-        String error = eDatos.getChildText("error");
-        Logger.getLogger(EnumProtocolo.class.getName())
-                .log(Level.SEVERE, "Worker reportó error en GUARDAR_SERVICIOS: {0}", error);
-    }
-},
+    },
+    GUARDAR_SERVICIOS_ERROR {
+        @Override
+        public void accion(Cliente mCliente, Element eDatos) {
+            String error = eDatos.getChildText("error");
+            Logger.getLogger(EnumProtocolo.class.getName())
+                    .log(Level.SEVERE, "Worker reportó error en GUARDAR_SERVICIOS: {0}", error);
+        }
+    },
     GUARDAR_SERVICIOS_RESPUESTA {
         @Override
         public void accion(Cliente mCliente, Element eDatos) {
@@ -820,9 +825,6 @@ public enum EnumProtocolo {
                 int totalWorkers = workers.size();
                 int totalUrls = urls.size();
                 System.out.println("Distribuyendo " + totalUrls + " URL(s) entre " + totalWorkers + " worker(s)");
-
-// Reparto round-robin: worker 0 recibe índices 0, totalWorkers, 2*totalWorkers...
-//                      worker 1 recibe índices 1, totalWorkers+1... etc.
                 for (int i = 0; i < totalWorkers; i++) {
                     ArrayList<String> urlsDeEsteWorker = new ArrayList<>();
                     for (int j = i; j < totalUrls; j += totalWorkers) {
@@ -853,19 +855,6 @@ public enum EnumProtocolo {
 
                 System.out.println("Tarea " + idTarea + " distribuida entre " + totalWorkers + " worker(s)");
 
-//            MiClienteTrabajador worker = MiServidor.getTrabajador();
-//            if (worker == null) {
-//                enviarErrorAlCliente(mCliente, "ANALIZAR_TAREA_CON_OPCIONES", 
-//                    "No hay worker disponible");
-//                return;
-//            }
-//
-//            DataProtocolo dpTrabajador = new DataProtocolo(
-//                "ANALIZAR_URL_COMPLETO", tarea.toXMLElement()
-//            );
-//            worker.enviarDatos(GestionXML.xmlToString(dpTrabajador.geteAccion()));
-//
-//            System.out.println("Tarea " + idTarea + " enviada al worker con opciones seleccionadas");
             } catch (Exception ex) {
                 Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
                 enviarErrorAlCliente(mCliente, "ANALIZAR_TAREA_CON_OPCIONES", ex.getMessage());
@@ -935,6 +924,83 @@ public enum EnumProtocolo {
             } else {
                 Logger.getLogger(EnumProtocolo.class.getName())
                         .log(Level.WARNING, "Error notificado a cliente: {0}", mensaje);
+            }
+        }
+    },
+    EDITARTAREA {
+        @Override
+        public void accion(Cliente mCliente, Element eDatos) {
+            try {
+                System.out.println("EDITARTAREA recibido");
+
+                Tarea tarea = new Tarea();
+                tarea.toObject(eDatos);
+
+                TareaBusiness tb = new TareaBusiness();
+                tb.actualizar(tarea);
+
+                Element eRespuesta = new Element("respuesta");
+                eRespuesta.addContent(new Element("resultado").setText("OK"));
+                eRespuesta.addContent(new Element("mensaje").setText("Tarea editada correctamente"));
+
+                DataProtocolo dp = new DataProtocolo("EDITARTAREA", eRespuesta);
+                mCliente.enviarDatos(GestionXML.xmlToString(dp.geteAccion()));
+
+            } catch (Exception ex) {
+                Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
+
+                Element eRespuesta = new Element("respuesta");
+                eRespuesta.addContent(new Element("resultado").setText("ERROR"));
+                eRespuesta.addContent(new Element("mensaje").setText("Error al editar tarea: " + ex.getMessage()));
+
+                DataProtocolo dp = new DataProtocolo("EDITARTAREA", eRespuesta);
+                mCliente.enviarDatos(GestionXML.xmlToString(dp.geteAccion()));
+            }
+        }
+    },
+    EDITARUSUARIO {
+        @Override
+        public void accion(Cliente mCliente, Element eDatos) {
+            try {
+                System.out.println("EDITARUSUARIO recibido");
+
+                Element eUsuario = eDatos.getChild("usuario");
+
+                if (eUsuario == null) {
+                    Element eError = new Element("exito").setText("false");
+                    eError.addContent(new Element("mensaje").setText("Datos de usuario no encontrados"));
+
+                    DataProtocolo dp = new DataProtocolo("EDITARUSUARIO", eError);
+                    mCliente.enviarDatos(GestionXML.xmlToString(dp.geteAccion()));
+                    return;
+                }
+
+                Usuario usuario = new Usuario();
+                usuario.toObject(eUsuario);
+
+                if (usuario.getContrasena() != null && !usuario.getContrasena().trim().isEmpty()) {
+                    String contrasenaEncriptada = encriptarSHA1(usuario.getContrasena());
+                    usuario.setContrasena(contrasenaEncriptada);
+                }
+
+                UsuarioBusiness ub = new UsuarioBusiness();
+                ub.actualizar(usuario);
+
+                Element eRespuesta = new Element("exito").setText("true");
+                eRespuesta.addContent(new Element("mensaje").setText("Usuario editado correctamente"));
+
+                DataProtocolo dp = new DataProtocolo("EDITARUSUARIO", eRespuesta);
+                mCliente.enviarDatos(GestionXML.xmlToString(dp.geteAccion()));
+
+            } catch (Exception ex) {
+                Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
+
+                Element eError = new Element("exito").setText("false");
+                eError.addContent(new Element("mensaje")
+                        .setText("Error al editar usuario: " + ex.getMessage()));
+
+                DataProtocolo dp = new DataProtocolo("EDITARUSUARIO", eError);
+                mCliente.enviarDatos(GestionXML.xmlToString(dp.geteAccion()));
             }
         }
     };
