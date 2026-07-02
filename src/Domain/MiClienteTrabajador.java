@@ -4,13 +4,9 @@
  */
 package Domain;
 
-import Domain.DataProtocolo;
-import Domain.Resultado;
-import Domain.Tarea;
 import Utility.GestionXML;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.logging.Level;

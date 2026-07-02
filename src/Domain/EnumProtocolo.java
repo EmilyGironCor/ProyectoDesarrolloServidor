@@ -14,8 +14,6 @@ import java.util.List;
 import org.jdom.Element;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 
 public enum EnumProtocolo {
 
@@ -65,7 +63,7 @@ public enum EnumProtocolo {
                 Tarea tarea = new Tarea();
                 tarea.toObject(eDatos);
 
-                // Leer el usuario encargado (puede venir por nombre o por ID)
+              
                 Element eTarea = eDatos.getChild("tarea");
                 String nombreEncargado = null;
                 int idEncargado = 0;
@@ -116,7 +114,7 @@ public enum EnumProtocolo {
                     return;
                 }
 
-                // LEER LISTA DE URLs (si no se cargó en toObject)
+             
                 Element eUrls = eTarea.getChild("urls");
                 if (eUrls != null && (tarea.getUrls() == null || tarea.getUrls().isEmpty())) {
                     ArrayList<String> urls = new ArrayList<>();
@@ -130,7 +128,6 @@ public enum EnumProtocolo {
                     tarea.setUrls(urls);
                 }
 
-                // LEER OPCIONES DE ANÁLISIS (si no se cargaron en toObject)
                 Element eOpciones = eTarea.getChild("opcionesAnalisis");
                 if (eOpciones != null) {
                     String img = eOpciones.getChildText("analizarImagenes");
@@ -165,9 +162,6 @@ public enum EnumProtocolo {
                 System.out.println(" Tarea insertada con ID: " + idGenerado);
                 System.out.println("   URLs: " + (tarea.getUrls() != null ? tarea.getUrls().size() : 0));
 
-                // SE ELIMINÓ EL BLOQUE QUE ENVIABA AUTOMÁTICAMENTE AL WORKER
-                // La tarea queda en estado "pendiente" y solo se analiza cuando
-                // el usuario lo solicite explícitamente desde JIFVentanaListarTarea
                 Element eRespuesta = new Element("respuesta");
                 eRespuesta.addContent(new Element("resultado").setText("OK"));
                 eRespuesta.addContent(new Element("mensaje").setText("Tarea registrada correctamente con "
@@ -509,13 +503,13 @@ public enum EnumProtocolo {
                     Producto p = new Producto();
                     p.toObject(eProducto);
 
-                    // ✅ ASIGNAR idTarea si no viene en el XML
+             
                     if (p.getIdTarea() == 0 && idTarea != null) {
                         p.setIdTarea(Integer.parseInt(idTarea));
                     }
 
                     productoData.insertar(p);
-                    System.out.println("✅ Producto guardado: " + p.getDescripcion() + " (Tarea ID: " + p.getIdTarea() + ")");
+                    System.out.println(" Producto guardado: " + p.getDescripcion() + " (Tarea ID: " + p.getIdTarea() + ")");
                 }
 
                 System.out.println(eProductos.size() + " productos guardados para tarea " + idTarea);
@@ -616,14 +610,14 @@ public enum EnumProtocolo {
                 System.out.println("  Videos:   " + resultado.getTotalVideos());
                 System.out.println("  Productos:" + resultado.getTotalProductos());
 
-                // ✅ NUEVO: Actualizar estado de la tarea
+        
                 try {
                     TareaBusiness tb = new TareaBusiness();
                     Tarea tarea = tb.buscarPorId(resultado.getIdTarea());
                     if (tarea != null) {
                         tarea.setEstado("completada");
                         tb.actualizar(tarea);
-                        System.out.println("✅ Estado de tarea " + resultado.getIdTarea() + " actualizado a 'completada'");
+                        System.out.println(" Estado de tarea " + resultado.getIdTarea() + " actualizado a 'completada'");
                     }
                 } catch (SQLException ex) {
                     Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
@@ -652,7 +646,7 @@ public enum EnumProtocolo {
                 enviarErrorAlCliente(mCliente, "LISTARRESULTADOS", ex.getMessage());
             }
         }
-    },// Agregar en EnumProtocolo.java del servidor
+    },
     LISTARPRODUCTOS {
         @Override
         public void accion(Cliente mCliente, Element eDatos) {
@@ -696,13 +690,13 @@ public enum EnumProtocolo {
                     Servicio s = new Servicio();
                     s.toObject(eServicio);
 
-                    // ✅ ASIGNAR idTarea al servicio (si no viene en el XML)
+                  
                     if (s.getIdTarea() == 0 && idTarea != null) {
                         s.setIdTarea(Integer.parseInt(idTarea));
                     }
 
                     servicioData.insertar(s);
-                    System.out.println("✅ Servicio guardado: " + s.getNombre() + " (Tarea ID: " + s.getIdTarea() + ")");
+                    System.out.println(" Servicio guardado: " + s.getNombre() + " (Tarea ID: " + s.getIdTarea() + ")");
                 }
 
                 System.out.println(eServicios.size() + " servicios guardados para tarea " + idTarea);
@@ -930,7 +924,7 @@ public enum EnumProtocolo {
         @Override
         public void accion(Cliente cliente, Element eDato) {
             try {
-                System.out.println("📝 EDITARTAREA recibido");
+                System.out.println("EDITARTAREA recibido");
 
                 // Obtener la tarea del XML
                 Element eTarea = eDato.getChild("tarea");
@@ -997,7 +991,7 @@ public enum EnumProtocolo {
                 DataProtocolo dp = new DataProtocolo("EDITARTAREA_RESPUESTA", eRespuesta);
                 cliente.enviarDatos(GestionXML.xmlToString(dp.geteAccion()));
 
-                System.out.println("✅ Tarea ID " + tareaEditada.getIdTarea() + " editada correctamente");
+                System.out.println("Tarea ID " + tareaEditada.getIdTarea() + " editada correctamente");
 
             } catch (SQLException ex) {
                 Logger.getLogger(EnumProtocolo.class.getName()).log(Level.SEVERE, null, ex);
